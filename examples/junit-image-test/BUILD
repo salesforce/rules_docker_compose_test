@@ -13,10 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_docker_compose//docker_compose:docker_compose_test.bzl", "docker_compose_test")
+load("@rules_docker_compose//docker_compose:docker_compose_test.bzl", "junit_docker_compose_test")
 
-docker_compose_test(
-    name = "self-contained",
+junit_docker_compose_test(
+    name = "junit-image-test",
     docker_compose_file = ":docker-compose.yml",
     docker_compose_test_container = "test_container",
+    test_srcs = glob(["**/*Test.java"]),
+    test_deps = ["@maven//:org_junit_jupiter_junit_jupiter_api"],
+    classpath_jars = ["@maven//:org_junit_platform_junit_platform_console_standalone"],
+    test_image_base = "@distroless_java",
 )

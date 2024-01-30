@@ -43,7 +43,7 @@ sh_binary(
 )
 
 docker_compose_test(
-    name = "locally-built-image",
+    name = "locally-built-image-test",
     docker_compose_file = ":docker-compose.yml",
     docker_compose_test_container = "test_container",
     local_image_targets = "locally-built-image:tarball",
