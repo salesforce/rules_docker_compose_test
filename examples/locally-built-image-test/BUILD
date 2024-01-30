@@ -34,7 +34,7 @@ oci_image(
 oci_tarball(
     name = "tarball",
     image = ":java_image",
-    repo_tags = ["locally-built-image:1"],
+    repo_tags = ["locally-built-image:2"],
 )
 
 sh_binary(
@@ -46,6 +46,6 @@ docker_compose_test(
     name = "locally-built-image-test",
     docker_compose_file = ":docker-compose.yml",
     docker_compose_test_container = "test_container",
-    local_image_targets = "locally-built-image:tarball",
+    local_image_targets = "locally-built-image-test:tarball",
     data = [":docker_image_fixture"],
 )

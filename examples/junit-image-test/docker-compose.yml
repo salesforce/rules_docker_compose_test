@@ -15,5 +15,5 @@
 
 services:
   test_container:
-    image: locally-built-image-with-junit-test:test_container
+    image: junit-image-test:test_container
     entrypoint: ["/busybox/sh", "./test_container_entrypoint.sh"]

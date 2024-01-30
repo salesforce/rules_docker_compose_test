@@ -16,7 +16,7 @@
 load("@rules_docker_compose//docker_compose:docker_compose_test.bzl", "docker_compose_test")
 
 docker_compose_test(
-    name = "junit-image-test",
+    name = "external-image-test",
     docker_compose_file = ":docker-compose.yml",
     docker_compose_test_container = "test_container",
 )
