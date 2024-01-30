@@ -60,7 +60,7 @@ docker_compose_test(
     name = "locally-built-image-test",
     docker_compose_file = ":docker-compose.yml",
     docker_compose_test_container = "test_container",
-    local_image_targets = "locally-built-image:tarball",
+    local_image_targets = "locally-built-image-test:tarball",
     data = [":docker_image_fixture"],
 )
 ```
@@ -68,7 +68,7 @@ docker_compose_test(
 ```yaml
 services:
   test_container:
-    image: locally-built-image:1
+    image: locally-built-image:2
     entrypoint: ["cat", "/files/hello.txt"]
 ```
 
@@ -91,7 +91,7 @@ junit_docker_compose_test(
 ```yaml
 services:
   test_container:
-    image: locally-built-image-with-junit-test:test_container
+    image: junit-image-test:test_container
     entrypoint: ["/busybox/sh", "./test_container_entrypoint.sh"]
     environment:
       - JAVA_BINARY=/path/to/jdk/in/custom/image/bin/java
