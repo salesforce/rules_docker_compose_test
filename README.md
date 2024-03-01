@@ -2,6 +2,10 @@
 
 This bazel ruleset provides a macro so you can run docker-compose tests as bazel test rules. See the [examples](./examples) directory for full usage of the `docker_compose_test` rule.
 
+## Bringing the rule into your Bazel repository
+
+Check the [latest release](https://github.com/salesforce/rules_docker_compose/releases) for instructions.
+
 ## How does it work?
 
 The rule brings up the docker-compose file and validates that the exit code of the test container is `0`.

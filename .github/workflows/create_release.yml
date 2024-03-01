@@ -46,6 +46,13 @@ jobs:
                 sha256 = "${{ steps.get_sha.outputs.sha }}",
                 urls = ["https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/download/${{ steps.get_pushed_tag.outputs.TAG }}/rules_docker_compose-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz"],
             )
+
+            load("@rules_docker_compose//:repositories.bzl", "rules_docker_compose_repositories")
+            rules_docker_compose_repositories()
+
+            load("@rules_docker_compose//:setup.bzl", "rules_docker_compose_setup", "repo_absolute_path")
+            repo_absolute_path(name="repo_absolute_path")
+            rules_docker_compose_setup()
             ```
           generate_release_notes: true
           files: rules_docker_compose-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz
