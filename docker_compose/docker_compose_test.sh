@@ -13,13 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# we should not use "set -e" here because we want the docker-compose down to happen at the end regardless of failure/success.
+
 # start by building any local images that are needed for the docker-compose tests
 export IFS=","
 echo $LOCAL_IMAGE_TARGETS
 for LOCAL_IMAGE_TARGET in $LOCAL_IMAGE_TARGETS; do
     s="$LOCAL_IMAGE_TARGET.sh"
+    echo "building $LOCAL_IMAGE_TARGET with $s"
     $s
 done
+
+# PRE_COMPOSE_UP_SCRIPT is set
+if [[ -n "$PRE_COMPOSE_UP_SCRIPT" ]]; then
+    # we want to move to the location of the script before executing it
+    # so paths are relative to it. After the script is executed, we move
+    # back to the original location.
+    location=$(pwd)
+    cd $WORKSPACE_PATH
+    cd $(dirname $PRE_COMPOSE_UP_SCRIPT)
+    $(basename $PRE_COMPOSE_UP_SCRIPT)
+    cd $location
+fi
 
 # we need to use the path of the real compose file in the file-tree.
 # if we use the file from inside the sandbox, symlinks will be used for volume mounted files.

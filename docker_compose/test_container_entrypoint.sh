@@ -13,22 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ -z "$JAVA_BINARY" ]]; then
-    JAVA_BINARY="/usr/bin/java"
+if [[ -z "$JAVA_HOME" ]]; then
+    JAVA_HOME="/usr"
 fi
 
-TEST_UBER_JAR=$(find ./ -maxdepth 1 -name '*_uber_jar.jar')
+TEST_UBER_JAR=$(find ./ -maxdepth 1 -name '*_uber_jar_deploy.jar')
 JUNIT_PLATFORM_CONSOLE_STANDALONE_JAR=$(find ./ -maxdepth 1 -name '*junit-platform-console-standalone*.jar')
 
 # TODO: need to find a better solution than adding all of the jars to the class-path below
 # The only one we should need to add is the fat jar because it should contain the rest of them..
 # However, it seems like we need to add all of the spring/spring-boot jars like this.
-JARS=$(find ./ -maxdepth 1 -name '*.jar')
+JARS=$(find ./ -maxdepth 1 -name '*.jar' ! -name '*_uber_jar_deploy.jar')
 CLASS_PATH_STRING=""
 for JAR in $JARS; do
   CLASS_PATH_STRING="$CLASS_PATH_STRING --class-path $JAR"
 done
 
-# JUNIT_PARAMS can be set in their compose file to filter for specific tests
+# JUNIT_PARAMS can be set in the docker-compose file to filter for specific tests
 # e.g. --include-classname com.something.integration.*
-$JAVA_BINARY -jar $JUNIT_PLATFORM_CONSOLE_STANDALONE_JAR --class-path $TEST_UBER_JAR --scan-class-path --fail-if-no-tests $CLASS_PATH_STRING $JUNIT_PARAMS
+cmd="$JAVA_HOME/bin/java -jar $JUNIT_PLATFORM_CONSOLE_STANDALONE_JAR \
+    --scan-class-path --fail-if-no-tests $CLASS_PATH_STRING --class-path $TEST_UBER_JAR $JUNIT_PARAMS"
+echo $cmd
+$cmd

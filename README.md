@@ -94,6 +94,10 @@ services:
     image: junit-image-test:test_container
     entrypoint: ["/busybox/sh", "./test_container_entrypoint.sh"]
     environment:
-      - JAVA_BINARY=/path/to/jdk/in/custom/image/bin/java
+      - JAVA_HOME=/path/to/jdk/in/custom/image/bin/java
       - JUNIT_PARAMS=--include-classname com.something.integration.*
 ```
+
+## Pre compose up script
+
+Sometimes, you may need some logic to run before the compose test containers come up. You can use `pre_compose_up_script` for that purpose. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
