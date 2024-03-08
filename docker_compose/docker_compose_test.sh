@@ -19,9 +19,16 @@
 export IFS=","
 echo $LOCAL_IMAGE_TARGETS
 for LOCAL_IMAGE_TARGET in $LOCAL_IMAGE_TARGETS; do
-    s="$LOCAL_IMAGE_TARGET.sh"
-    echo "building $LOCAL_IMAGE_TARGET with $s"
-    $s
+    # rules_oci image install script
+    if [ -f "$LOCAL_IMAGE_TARGET.sh" ]; then
+        "$LOCAL_IMAGE_TARGET.sh"
+    # rules_docker image install script
+    elif [ -f "$LOCAL_IMAGE_TARGET.executable" ]; then
+        "$LOCAL_IMAGE_TARGET.executable"
+    else
+        echo "[ERROR] no install script present for $LOCAL_IMAGE_TARGET"
+        exit 1
+    fi
 done
 
 # PRE_COMPOSE_UP_SCRIPT is set
