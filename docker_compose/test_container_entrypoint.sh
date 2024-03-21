@@ -13,8 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# if JAVA_HOME is not set, just default to /usr (works if /usr/bin/java exists)
 if [[ -z "$JAVA_HOME" ]]; then
     JAVA_HOME="/usr"
+# this is used if JAVA_HOME contains an * (if version changes regularly this can be useful)
+elif [[ "$JAVA_HOME" == *"\*"* ]]; then
+    JAVA_HOME=$(find $JAVA_HOME -maxdepth 1 | head -n 1)
 fi
 
 TEST_UBER_JAR=$(find ./ -maxdepth 1 -name '*_uber_jar_deploy.jar')
