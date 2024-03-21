@@ -17,3 +17,5 @@ services:
   test_container:
     image: junit-image-test:test_container
     entrypoint: ["/busybox/sh", "./test_container_entrypoint.sh"]
+    environment:
+      - JAVA_HOME=/usr/
