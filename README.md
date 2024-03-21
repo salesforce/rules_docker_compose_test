@@ -105,3 +105,7 @@ services:
 ## Pre compose up script
 
 Sometimes, you may need some logic to run before the compose test containers come up. You can use `pre_compose_up_script` for that purpose. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
+
+## extra_docker_compose_up_args
+
+You can append extra arguments to the `docker compose up` command using `extra_docker_compose_up_args`. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.

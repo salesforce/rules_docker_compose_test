@@ -28,6 +28,7 @@ def docker_compose_test(
     docker_compose_file,
     docker_compose_test_container,
     pre_compose_up_script = "",
+    extra_docker_compose_up_args = "",
     local_image_targets = "",
     data = [],
     tags = [],
@@ -40,7 +41,7 @@ def docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose//docker_compose:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args),
         size = size,
         tags = tags,
         data = data,
@@ -53,6 +54,7 @@ def junit_docker_compose_test(
     docker_compose_file,
     docker_compose_test_container,
     pre_compose_up_script = "",
+    extra_docker_compose_up_args = "",
     local_image_targets = "",
     classpath_jars = [],
     test_image_base = None,
@@ -132,7 +134,7 @@ def junit_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose//docker_compose:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args),
         size = size,
         tags = tags,
         data = data,
@@ -140,12 +142,13 @@ def junit_docker_compose_test(
     )
 
 
-def _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script):
+def _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args):
     env = {
         "WORKSPACE_PATH": BUILD_WORKSPACE_DIRECTORY,
         "DOCKER_COMPOSE_FILE": "$(location " + docker_compose_file + ")",
         "LOCAL_IMAGE_TARGETS": local_image_targets.replace(":", "/"),
         "DOCKER_COMPOSE_TEST_CONTAINER": docker_compose_test_container,
+        "EXTRA_DOCKER_COMPOSE_UP_ARGS": extra_docker_compose_up_args,
     }
 
     if len(pre_compose_up_script):

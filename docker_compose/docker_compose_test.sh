@@ -48,7 +48,9 @@ fi
 ABSOLUTE_COMPOSE_FILE_PATH=$WORKSPACE_PATH/$DOCKER_COMPOSE_FILE
 
 # bring up compose file & get exit status-code from the integration test container
-docker-compose -f $ABSOLUTE_COMPOSE_FILE_PATH up --exit-code-from $DOCKER_COMPOSE_TEST_CONTAINER
+docker_compose_up_cmd="docker-compose -f $ABSOLUTE_COMPOSE_FILE_PATH up --exit-code-from $DOCKER_COMPOSE_TEST_CONTAINER $EXTRA_DOCKER_COMPOSE_UP_ARGS"
+echo "running: $docker_compose_up_cmd"
+echo "$docker_compose_up_cmd" | bash
 result=$?
 docker-compose -f $ABSOLUTE_COMPOSE_FILE_PATH down
 exit $result
