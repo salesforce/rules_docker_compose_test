@@ -94,6 +94,7 @@ def junit_docker_compose_test(
         name = name + "_required_classpath_jars_tar",
         srcs = classpath_jars,
         testonly = True,
+        include_runfiles = True,
     )
 
     # this is what actually runs the junit jar for your test execution
