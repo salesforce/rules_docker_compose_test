@@ -100,9 +100,10 @@ services:
     environment:
       - JAVA_HOME=/path/to/jdk/in/custom/image/bin/java
       - JUNIT_PARAMS=--include-classname com.something.integration.*
+      - JVM_ARGS=-Dfoo.bar=true
 ```
 
-## Pre compose up script
+## pre_compose_up_script
 
 Sometimes, you may need some logic to run before the compose test containers come up. You can use `pre_compose_up_script` for that purpose. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
 
