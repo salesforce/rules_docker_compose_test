@@ -87,6 +87,3 @@ rules_docker_compose_repositories()
 load("@rules_docker_compose//:setup.bzl", "rules_docker_compose_dependencies", "repo_absolute_path")
 rules_docker_compose_dependencies()
 repo_absolute_path(name="repo_absolute_path")
-
-load("@rules_docker_compose//:toolchains.bzl", "rules_docker_compose_toolchains")
-rules_docker_compose_toolchains()
