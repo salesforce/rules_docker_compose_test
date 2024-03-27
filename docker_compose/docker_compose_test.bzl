@@ -70,7 +70,7 @@ def junit_docker_compose_test(
       data = data + [ pre_compose_up_script ]
 
     if test_image_base == None:
-        fail("if you are definiing test_srcs, you need to provide a test_image_base")
+        fail("if you are defining test_srcs, you need to provide a test_image_base")
 
     # building an uber jar with test srcs & all dependencies
     native.java_binary(
