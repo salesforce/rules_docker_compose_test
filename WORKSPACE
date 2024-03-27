@@ -14,3 +14,13 @@
 # limitations under the License.
 
 workspace(name = "rules_docker_compose")
+
+load("//:repositories.bzl", "rules_docker_compose_repositories")
+rules_docker_compose_repositories()
+
+load("@//:setup.bzl", "rules_docker_compose_dependencies", "repo_absolute_path")
+rules_docker_compose_dependencies()
+repo_absolute_path(name="repo_absolute_path")
+
+load("@//:toolchains.bzl", "rules_docker_compose_toolchains")
+rules_docker_compose_toolchains()

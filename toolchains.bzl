@@ -13,17 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_oci//oci:dependencies.bzl", "rules_oci_dependencies")
-load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "oci_register_toolchains")
 
-def rules_docker_compose_dependencies():
-    rules_oci_dependencies()
-    rules_pkg_dependencies()
-
-def _impl(repository_ctx):
-    repository_ctx.file("BUILD.bazel", content = "")
-    repository_ctx.file("build_root.bzl", content = "BUILD_WORKSPACE_DIRECTORY = \"%s\"" % repository_ctx.workspace_root)
-
-repo_absolute_path = repository_rule(
-    implementation = _impl,
-)
+def rules_docker_compose_toolchains():
+    oci_register_toolchains(
+        name = "oci",
+        crane_version = LATEST_CRANE_VERSION,
+    )
