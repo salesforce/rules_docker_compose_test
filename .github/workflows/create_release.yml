@@ -50,9 +50,9 @@ jobs:
             load("@rules_docker_compose//:repositories.bzl", "rules_docker_compose_repositories")
             rules_docker_compose_repositories()
 
-            load("@rules_docker_compose//:setup.bzl", "rules_docker_compose_setup", "repo_absolute_path")
+            load("@rules_docker_compose//:setup.bzl", "rules_docker_compose_dependencies", "repo_absolute_path")
+            rules_docker_compose_dependencies()
             repo_absolute_path(name="repo_absolute_path")
-            rules_docker_compose_setup()
             ```
           generate_release_notes: true
           files: rules_docker_compose-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz

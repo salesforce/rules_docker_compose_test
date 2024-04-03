@@ -14,16 +14,11 @@
 # limitations under the License.
 
 load("@rules_oci//oci:dependencies.bzl", "rules_oci_dependencies")
-load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "oci_register_toolchains")
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
-def rules_docker_compose_setup():
+def rules_docker_compose_dependencies():
     rules_oci_dependencies()
     rules_pkg_dependencies()
-    oci_register_toolchains(
-        name = "oci",
-        crane_version = LATEST_CRANE_VERSION,
-    )
 
 def _impl(repository_ctx):
     repository_ctx.file("BUILD.bazel", content = "")
