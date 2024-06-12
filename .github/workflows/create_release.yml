@@ -30,11 +30,11 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - run: git archive --output=rules_docker_compose-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz ${{ steps.get_pushed_tag.outputs.TAG }}
+      - run: git archive --output=rules_docker_compose_test-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz ${{ steps.get_pushed_tag.outputs.TAG }}
 
       - name: get SHA256 of archive
         id: get_sha
-        run: echo "::set-output name=sha::$(sha256sum rules_docker_compose-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz | cut -f 1 -d ' ')"
+        run: echo "::set-output name=sha::$(sha256sum rules_docker_compose_test-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz | cut -f 1 -d ' ')"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -42,17 +42,17 @@ jobs:
           body: |
             ```
             http_archive(
-                name = "rules_docker_compose",
+                name = "rules_docker_compose_test",
                 sha256 = "${{ steps.get_sha.outputs.sha }}",
-                urls = ["https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/download/${{ steps.get_pushed_tag.outputs.TAG }}/rules_docker_compose-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz"],
+                urls = ["https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/download/${{ steps.get_pushed_tag.outputs.TAG }}/rules_docker_compose_test-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz"],
             )
 
-            load("@rules_docker_compose//:repositories.bzl", "rules_docker_compose_repositories")
-            rules_docker_compose_repositories()
+            load("@rules_docker_compose_test//:repositories.bzl", "rules_docker_compose_test_repositories")
+            rules_docker_compose_test_repositories()
 
-            load("@rules_docker_compose//:setup.bzl", "rules_docker_compose_dependencies", "repo_absolute_path")
-            rules_docker_compose_dependencies()
+            load("@rules_docker_compose_test//:setup.bzl", "rules_docker_compose_test_dependencies", "repo_absolute_path")
+            rules_docker_compose_test_dependencies()
             repo_absolute_path(name="repo_absolute_path")
             ```
           generate_release_notes: true
-          files: rules_docker_compose-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz
+          files: rules_docker_compose_test-${{ steps.get_pushed_tag.outputs.TAG }}.tar.gz

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_tarball")
-load("@rules_docker_compose//docker_compose:docker_compose_test.bzl", "docker_compose_test")
+load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", "docker_compose_test")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 pkg_tar(
