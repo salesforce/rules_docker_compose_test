@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_docker_compose//docker_compose:docker_compose_test.bzl", "junit_docker_compose_test")
+load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", "junit_docker_compose_test")
 
 junit_docker_compose_test(
     name = "junit-image-test",

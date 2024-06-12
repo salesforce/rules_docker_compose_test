@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.salesforce.rules_docker_compose.HelloTest;
+package com.salesforce.rules_docker_compose_test.HelloTest;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;

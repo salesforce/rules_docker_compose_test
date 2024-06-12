@@ -40,7 +40,7 @@ def docker_compose_test(
       data = data + [ pre_compose_up_script ]
     native.sh_test(
         name = name,
-        srcs = ["@rules_docker_compose//docker_compose:docker_compose_test.sh"],
+        srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
         env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args),
         size = size,
         tags = tags,
@@ -100,7 +100,7 @@ def junit_docker_compose_test(
     # this is what actually runs the junit jar for your test execution
     pkg_tar(
         name = name + "_test_container_entrypoint",
-        srcs = ["@rules_docker_compose//docker_compose:test_container_entrypoint.sh"],
+        srcs = ["@rules_docker_compose_test//docker_compose_test:test_container_entrypoint.sh"],
     )
 
     oci_image(
@@ -134,7 +134,7 @@ def junit_docker_compose_test(
     local_image_targets += "%s:%s" % (native.package_name(), docker_compose_test_container)
     native.sh_test(
         name = name,
-        srcs = ["@rules_docker_compose//docker_compose:docker_compose_test.sh"],
+        srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
         env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args),
         size = size,
         tags = tags,

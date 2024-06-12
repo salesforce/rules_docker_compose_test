@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-workspace(name = "rules_docker_compose")
+workspace(name = "rules_docker_compose_test")
 
-load("//:repositories.bzl", "rules_docker_compose_repositories")
-rules_docker_compose_repositories()
+load("//:repositories.bzl", "rules_docker_compose_test_repositories")
+rules_docker_compose_test_repositories()
 
-load("@//:setup.bzl", "rules_docker_compose_dependencies", "repo_absolute_path")
-rules_docker_compose_dependencies()
+load("@//:setup.bzl", "rules_docker_compose_test_dependencies", "repo_absolute_path")
+rules_docker_compose_test_dependencies()
 repo_absolute_path(name="repo_absolute_path")

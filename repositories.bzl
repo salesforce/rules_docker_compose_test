@@ -19,7 +19,7 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 def http_archive(name, **kwargs):
     maybe(_http_archive, name = name, **kwargs)
 
-def rules_docker_compose_repositories():
+def rules_docker_compose_test_repositories():
     http_archive(
         name = "rules_pkg",
         urls = [

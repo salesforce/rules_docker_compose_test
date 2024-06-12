@@ -16,7 +16,7 @@
 load("@rules_oci//oci:dependencies.bzl", "rules_oci_dependencies")
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
-def rules_docker_compose_dependencies():
+def rules_docker_compose_test_dependencies():
     rules_oci_dependencies()
     rules_pkg_dependencies()
 
