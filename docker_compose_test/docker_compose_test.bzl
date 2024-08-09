@@ -60,6 +60,7 @@ def junit_docker_compose_test(
     test_image_base = None,
     test_srcs = [],
     test_deps = [],
+    uber_jar_javacopts = [],
     data = [],
     tags = [],
     size = "large",
@@ -79,6 +80,7 @@ def junit_docker_compose_test(
         testonly = True,
         deps = test_deps,
         resources = test_deps,
+        javacopts = uber_jar_javacopts,
         main_class = "not_used",
     )
 

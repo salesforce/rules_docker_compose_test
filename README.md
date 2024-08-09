@@ -110,3 +110,7 @@ Sometimes, you may need some logic to run before the compose test containers com
 ## extra_docker_compose_up_args
 
 You can append extra arguments to the `docker compose up` command using `extra_docker_compose_up_args`. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
+
+## javacopts
+
+You can pass `javacopts` when building the uber junit test binary using `uber_jar_javacopts`.
