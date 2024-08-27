@@ -113,6 +113,7 @@ def junit_docker_compose_test(
           name + "_required_classpath_jars_tar",
           name + "_test_container_entrypoint",
         ],
+        tags = tags,
         testonly = True,
     )
 
@@ -120,6 +121,7 @@ def junit_docker_compose_test(
         name = docker_compose_test_container,
         image = name.lower() + "_java_image",
         repo_tags = ["%s:%s" % (native.package_name(), docker_compose_test_container)],
+        tags = tags,
         testonly = True,
     )
 
