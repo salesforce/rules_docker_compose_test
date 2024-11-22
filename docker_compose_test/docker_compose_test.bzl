@@ -15,6 +15,7 @@
 
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load("@repo_absolute_path//:build_root.bzl",  "BUILD_WORKSPACE_DIRECTORY")
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_tarball")
 
 common_tags = [
@@ -38,6 +39,85 @@ def docker_compose_test(
     data = data + [ docker_compose_file ]
     if len(pre_compose_up_script):
       data = data + [ pre_compose_up_script ]
+    native.sh_test(
+        name = name,
+        srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args),
+        size = size,
+        tags = tags,
+        data = data,
+        **kwargs,
+    )
+
+def go_docker_compose_test(
+    name,
+    docker_compose_file,
+    docker_compose_test_container,
+    pre_compose_up_script = "",
+    extra_docker_compose_up_args = "",
+    local_image_targets = "",
+    test_image_base = None,
+    test_srcs = [],
+    test_deps = [],
+    data = [],
+    tags = [],
+    size = "large",
+    **kwargs,
+):
+    tags = common_tags + tags
+    data = data + [ docker_compose_file ]
+    if len(pre_compose_up_script):
+      data = data + [ pre_compose_up_script ]
+    if test_image_base == None:
+        fail("if you are defining test_srcs, you need to provide a test_image_base")
+
+    go_test(
+        name = name + ".go_test",
+        srcs = test_srcs,
+        deps = test_deps,
+        tags = tags,
+        testonly = True,
+    )
+
+    compiled_tests_target = ":" + name + ".go_test"
+
+    pkg_tar(
+        name = name + ".compiled_go_test_target",
+        srcs = [compiled_tests_target],
+        package_dir = "/tests",
+        tags = tags,
+        testonly = True,
+    )
+
+    oci_image(
+        name = name + ".oci_image",
+        base = test_image_base,
+        tars = [
+          name + ".compiled_go_test_target",
+        ],
+        tags = tags,
+        testonly = True,
+    )
+
+    oci_tarball(
+        name = docker_compose_test_container,
+        image = name + ".oci_image",
+        repo_tags = ["%s:%s" % (native.package_name(), docker_compose_test_container)],
+        tags = tags,
+        testonly = True,
+    )
+
+    # this builds & installs the test image.
+    native.sh_binary(
+        name = name + ".integration_test_image_fixture",
+        srcs = [docker_compose_test_container],
+        testonly = True,
+    )
+
+    data.append(name + ".integration_test_image_fixture")
+    if len(local_image_targets):
+        local_image_targets += ","
+    local_image_targets += "%s:%s" % (native.package_name(), docker_compose_test_container)
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
