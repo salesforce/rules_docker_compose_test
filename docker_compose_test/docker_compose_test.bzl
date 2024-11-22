@@ -59,6 +59,7 @@ def go_docker_compose_test(
     test_image_base = None,
     test_srcs = [],
     test_deps = [],
+    go_test_target_tags = [],
     data = [],
     tags = [],
     size = "large",
@@ -75,7 +76,7 @@ def go_docker_compose_test(
         name = name + ".go_test",
         srcs = test_srcs,
         deps = test_deps,
-        tags = tags,
+        tags = tags + go_test_target_tags,
         testonly = True,
     )
 
