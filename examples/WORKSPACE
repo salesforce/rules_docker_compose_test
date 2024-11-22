@@ -22,9 +22,9 @@ local_repository(
 
 http_archive(
     name = "rules_oci",
-    sha256 = "4a276e9566c03491649eef63f27c2816cc222f41ccdebd97d2c5159e84917c3b",
-    strip_prefix = "rules_oci-1.7.4",
-    url = "https://github.com/bazel-contrib/rules_oci/releases/download/v1.7.4/rules_oci-v1.7.4.tar.gz",
+    sha256 = "46ce9edcff4d3d7b3a550774b82396c0fa619cc9ce9da00c1b09a08b45ea5a14",
+    strip_prefix = "rules_oci-1.8.0",
+    url = "https://github.com/bazel-contrib/rules_oci/releases/download/v1.8.0/rules_oci-v1.8.0.tar.gz",
 )
 
 RULES_JVM_EXTERNAL_TAG = "6.0"
@@ -54,6 +54,16 @@ oci_pull(
     # tag = "debug", # debug distroless image can be debugged with --entrypoint "/busybox/sh"
     digest = "sha256:73c3687a9d7277f480a560ae380ba16acbe8eb5a0f459560b4466bb71e6288a1",
     image = "gcr.io/distroless/java17",
+)
+
+oci_pull(
+    name = "ubuntu",
+    digest = "sha256:278628f08d4979fb9af9ead44277dbc9c92c2465922310916ad0c46ec9999295",
+    image = "ubuntu",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
 )
 
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
@@ -86,3 +96,7 @@ rules_docker_compose_test_repositories()
 load("@rules_docker_compose_test//:setup.bzl", "rules_docker_compose_test_dependencies", "repo_absolute_path")
 rules_docker_compose_test_dependencies()
 repo_absolute_path(name="repo_absolute_path")
+
+load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+go_rules_dependencies()
+go_register_toolchains(version = "1.23.0")

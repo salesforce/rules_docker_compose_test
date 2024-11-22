@@ -78,9 +78,15 @@ services:
 
 ### junit_docker_compose_test
 
+```
+(cd examples && bazel test junit-image-test)
+```
+
 In this example, the test source files, dependencies, classpath jars and test image base are passed into the macro. The macro builds a docker image with all of these and then uses the junit standalone jar to execute the tests. You can use some magic customization environment variables in the docker-compose file.
 
 ```starlark
+load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", "junit_docker_compose_test")
+
 junit_docker_compose_test(
     name = "junit-image-test",
     docker_compose_file = ":docker-compose.yml",
@@ -103,6 +109,38 @@ services:
       - JVM_ARGS=-Dfoo.bar=true
 ```
 
+#### javacopts
+
+You can pass `javacopts` when building the uber junit test binary using `uber_jar_javacopts`.
+
+### go_docker_compose_test
+
+```
+(cd examples && bazel test --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 go-test-image-test)
+```
+
+In this example, the test source files, dependencies and test image base are passed into the macro. The macro builds a binary containing the test source files and dependencies which are executed as part of the docker-compose test.
+
+```starlark
+load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", "go_docker_compose_test")
+
+go_docker_compose_test(
+    name = "go-test-image-test",
+    docker_compose_file = ":docker-compose.yml",
+    docker_compose_test_container = "test_container",
+    test_srcs = glob(["**/*_test.go"]),
+    test_deps = [],
+    test_image_base = "@ubuntu",
+)
+```
+
+```yaml
+services:
+  test_container:
+    image: go-test-image-test:test_container
+    entrypoint: ["tests/go-test-image-test.go_test"]
+```
+
 ## pre_compose_up_script
 
 Sometimes, you may need some logic to run before the compose test containers come up. You can use `pre_compose_up_script` for that purpose. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
@@ -110,7 +148,3 @@ Sometimes, you may need some logic to run before the compose test containers com
 ## extra_docker_compose_up_args
 
 You can append extra arguments to the `docker compose up` command using `extra_docker_compose_up_args`. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
-
-## javacopts
-
-You can pass `javacopts` when building the uber junit test binary using `uber_jar_javacopts`.
