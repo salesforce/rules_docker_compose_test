@@ -78,13 +78,14 @@ services:
 
 ### junit_docker_compose_test
 
+```
 (cd examples && bazel test junit-image-test)
+```
 
 In this example, the test source files, dependencies, classpath jars and test image base are passed into the macro. The macro builds a docker image with all of these and then uses the junit standalone jar to execute the tests. You can use some magic customization environment variables in the docker-compose file.
 
 ```starlark
 load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", "junit_docker_compose_test")
-
 
 junit_docker_compose_test(
     name = "junit-image-test",
