@@ -18,13 +18,15 @@
 package com.salesforce.rules_docker_compose_test.HelloTest;
 
 import org.junit.jupiter.api.Test;
+import java.io.IOException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HelloTest {
 
     @Test
-     void helloWorldContainsHello() {
+     void helloWorldContainsHello() throws IOException, InterruptedException {
         // Testing that the $JAVA_HOME/bin binaries are available
         ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"sh", "-c", "jstat --help"});
         Process process = processBuilder.start();
