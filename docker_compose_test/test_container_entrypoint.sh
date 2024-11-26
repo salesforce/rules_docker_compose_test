@@ -15,11 +15,13 @@
 
 # if JAVA_HOME is not set, just default to /usr (works if /usr/bin/java exists)
 if [[ -z "$JAVA_HOME" ]]; then
-    JAVA_HOME="/usr"
+    export JAVA_HOME="/usr"
 # this is used if JAVA_HOME contains an * (if version changes regularly this can be useful)
 elif [[ "$JAVA_HOME" == *"\*"* ]]; then
-    JAVA_HOME=$(find $JAVA_HOME -maxdepth 1 | head -n 1)
+    export JAVA_HOME=$(find $JAVA_HOME -maxdepth 1 | head -n 1)
 fi
+
+export PATH=$JAVA_HOME/bin:$PATH
 
 TEST_UBER_JAR=$(find ./ -maxdepth 1 -name '*_uber_jar_deploy.jar')
 JUNIT_PLATFORM_CONSOLE_STANDALONE_JAR=$(find ./ -maxdepth 1 -name '*junit-platform-console-standalone*.jar')
