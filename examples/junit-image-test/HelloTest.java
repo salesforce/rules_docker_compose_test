@@ -28,9 +28,7 @@ class HelloTest {
     @Test
      void helloWorldContainsHello() throws IOException, InterruptedException {
         // Testing that the $JAVA_HOME/bin binaries are available
-        System.out.println(System.getenv("JAVA_HOME"));
-        System.out.println(System.getenv("PATH"));
-        ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"sh", "-c", "jstat --help"});
+        ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"sh", "-c", "java --version"});
         Process process = processBuilder.start();
         int exitValue = process.waitFor();
         assertEquals(0, exitValue);
