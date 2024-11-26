@@ -25,7 +25,7 @@ pkg_tar(
 
 oci_image(
     name = "java_image",
-    base = "@distroless_java",
+    base = "@openjdk",
     tars = [
       ":files",
     ],

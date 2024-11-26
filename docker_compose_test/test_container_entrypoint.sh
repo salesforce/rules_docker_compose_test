@@ -13,15 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+echo "[DEBUG] JAVA_HOME before discovery logic: $JAVA_HOME"
+
 # if JAVA_HOME is not set, just default to /usr (works if /usr/bin/java exists)
 if [[ -z "$JAVA_HOME" ]]; then
     export JAVA_HOME="/usr"
 # this is used if JAVA_HOME contains an * (if version changes regularly this can be useful)
-elif [[ "$JAVA_HOME" == *"\*"* ]]; then
+elif echo "$JAVA_HOME" | grep '*' > /dev/null; then
     export JAVA_HOME=$(find $JAVA_HOME -maxdepth 1 | head -n 1)
 fi
 
-# export PATH=$JAVA_HOME/bin:$PATH
+echo "[DEBUG] JAVA_HOME after discovery logic: $JAVA_HOME"
+export PATH=$JAVA_HOME/bin:$PATH
+echo "[DEBUG] PATH: $PATH"
 
 TEST_UBER_JAR=$(find ./ -maxdepth 1 -name '*_uber_jar_deploy.jar')
 JUNIT_PLATFORM_CONSOLE_STANDALONE_JAR=$(find ./ -maxdepth 1 -name '*junit-platform-console-standalone*.jar')
