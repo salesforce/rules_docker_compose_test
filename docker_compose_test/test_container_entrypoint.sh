@@ -21,7 +21,7 @@ elif [[ "$JAVA_HOME" == *"\*"* ]]; then
     export JAVA_HOME=$(find $JAVA_HOME -maxdepth 1 | head -n 1)
 fi
 
-export PATH=$JAVA_HOME/bin:$PATH
+# export PATH=$JAVA_HOME/bin:$PATH
 
 TEST_UBER_JAR=$(find ./ -maxdepth 1 -name '*_uber_jar_deploy.jar')
 JUNIT_PLATFORM_CONSOLE_STANDALONE_JAR=$(find ./ -maxdepth 1 -name '*junit-platform-console-standalone*.jar')
