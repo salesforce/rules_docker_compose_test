@@ -50,10 +50,13 @@ oci_register_toolchains(
 load("@rules_oci//oci:pull.bzl", "oci_pull")
 
 oci_pull(
-    name = "distroless_java",
-    # tag = "debug", # debug distroless image can be debugged with --entrypoint "/busybox/sh"
-    digest = "sha256:73c3687a9d7277f480a560ae380ba16acbe8eb5a0f459560b4466bb71e6288a1",
-    image = "gcr.io/distroless/java17",
+    name = "openjdk",
+    digest = "sha256:29c44ad7bb159a29a4458b74e8d37c1995cb8dc32abdd35e6d3e3d493e682d10",
+    image = "openjdk",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
 )
 
 oci_pull(

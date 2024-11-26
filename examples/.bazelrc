@@ -1,0 +1,2 @@
+common --test_output=errors
+common --verbose_explanations

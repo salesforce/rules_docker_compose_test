@@ -94,7 +94,7 @@ junit_docker_compose_test(
     test_srcs = glob(["**/*Test.java"]),
     test_deps = ["@maven//:org_junit_jupiter_junit_jupiter_api"],
     classpath_jars = ["@maven//:org_junit_platform_junit_platform_console_standalone"],
-    test_image_base = "@distroless_java",
+    test_image_base = "@openjdk",
 )
 ```
 
