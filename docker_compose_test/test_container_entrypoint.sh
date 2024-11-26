@@ -35,6 +35,10 @@ for JAR in $JARS; do
   CLASS_PATH_STRING="$CLASS_PATH_STRING --class-path $JAR"
 done
 
+echo "foo"
+echo $JAVA_HOME
+echo $PATH
+
 # JVM_ARGS can be set in the docker-compose file.
 # JUNIT_PARAMS can be set in the docker-compose file to filter for specific tests
 # e.g. --include-classname com.something.integration.*
