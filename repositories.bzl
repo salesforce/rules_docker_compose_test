@@ -30,9 +30,9 @@ def rules_docker_compose_test_repositories():
 
     http_archive(
         name = "rules_oci",
-        sha256 = "46ce9edcff4d3d7b3a550774b82396c0fa619cc9ce9da00c1b09a08b45ea5a14",
-        strip_prefix = "rules_oci-1.8.0",
-        url = "https://github.com/bazel-contrib/rules_oci/releases/download/v1.8.0/rules_oci-v1.8.0.tar.gz",
+        sha256 = "1bd16e455278d523f01326e0c3964cd64d7840a7e99cdd6e2617e59f698f3504",
+        strip_prefix = "rules_oci-2.2.0",
+        url = "https://github.com/bazel-contrib/rules_oci/releases/download/v2.2.0/rules_oci-v2.2.0.tar.gz",
     )
 
     http_archive(

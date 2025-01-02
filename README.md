@@ -49,7 +49,7 @@ In this example, `rules_oci` is used to build and tag an image (`locally-built-i
 
 ...
 
-oci_tarball(
+oci_load(
     name = "tarball",
     image = ":java_image",
     repo_tags = ["locally-built-image:1"],

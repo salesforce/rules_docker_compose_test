@@ -16,7 +16,7 @@
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load("@repo_absolute_path//:build_root.bzl",  "BUILD_WORKSPACE_DIRECTORY")
 load("@io_bazel_rules_go//go:def.bzl", "go_test")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_tarball")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 
 common_tags = [
     "docker", # these tests depend on docker
@@ -100,7 +100,7 @@ def go_docker_compose_test(
         testonly = True,
     )
 
-    oci_tarball(
+    oci_load(
         name = docker_compose_test_container,
         image = name + ".oci_image",
         repo_tags = ["%s:%s" % (native.package_name(), docker_compose_test_container)],
@@ -198,7 +198,7 @@ def junit_docker_compose_test(
         testonly = True,
     )
 
-    oci_tarball(
+    oci_load(
         name = docker_compose_test_container,
         image = name.lower() + "_java_image",
         repo_tags = ["%s:%s" % (native.package_name(), docker_compose_test_container)],
