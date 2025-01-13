@@ -1,2 +1,3 @@
 common --test_output=errors
 common --verbose_explanations
+common --lockfile_mode=off
