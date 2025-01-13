@@ -17,6 +17,13 @@ bazel_dep(name = "rules_oci", version = "2.2.0")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "rules_jvm_external", version = "6.2")
 bazel_dep(name = "rules_go", version = "0.50.1")
+bazel_dep(name = "rules_docker_compose_test", version = "1.0.0")
+bazel_dep(name = "rules_pkg", version = "0.10.1")
+
+local_path_override(
+    module_name = "rules_docker_compose_test",
+    path = "..",
+)
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
