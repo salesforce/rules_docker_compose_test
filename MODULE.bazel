@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Salesforce, Inc.
+# Copyright (c) 2025, Salesforce, Inc.
 # SPDX-License-Identifier: Apache-2
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-local_repository(
-    name="rules_docker_compose_test",
-    path= "..",
-)
-
-load("@rules_docker_compose_test//:repositories.bzl", "rules_docker_compose_test_repositories")
-rules_docker_compose_test_repositories()
-
-load("@rules_docker_compose_test//:setup.bzl", "rules_docker_compose_test_dependencies", "repo_absolute_path")
-rules_docker_compose_test_dependencies()
-repo_absolute_path(name="repo_absolute_path")
+bazel_dep(name = "rules_pkg", version = "0.10.1")
+bazel_dep(name = "rules_oci", version = "2.2.0")
+bazel_dep(name = "rules_go", version = "0.50.1")

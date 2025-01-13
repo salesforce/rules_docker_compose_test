@@ -15,7 +15,7 @@
 
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load("@repo_absolute_path//:build_root.bzl",  "BUILD_WORKSPACE_DIRECTORY")
-load("@io_bazel_rules_go//go:def.bzl", "go_test")
+load("@rules_go//go:def.bzl", "go_test")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 
 common_tags = [

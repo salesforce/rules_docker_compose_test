@@ -1,0 +1,53 @@
+# Copyright (c) 2025, Salesforce, Inc.
+# SPDX-License-Identifier: Apache-2
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+bazel_dep(name = "rules_oci", version = "2.2.0")
+bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "rules_jvm_external", version = "6.2")
+bazel_dep(name = "rules_go", version = "0.50.1")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+oci.pull(
+    name = "openjdk",
+    digest = "sha256:29c44ad7bb159a29a4458b74e8d37c1995cb8dc32abdd35e6d3e3d493e682d10",
+    image = "openjdk",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
+oci.pull(
+    name = "ubuntu",
+    digest = "sha256:278628f08d4979fb9af9ead44277dbc9c92c2465922310916ad0c46ec9999295",
+    image = "ubuntu",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
+use_repo(oci, "openjdk", "openjdk_linux_amd64", "openjdk_linux_arm64_v8", "ubuntu", "ubuntu_linux_amd64", "ubuntu_linux_arm64_v8")
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    artifacts = [
+        "org.junit.jupiter:junit-jupiter-api:5.10.1",
+        "org.junit.platform:junit-platform-console-standalone:1.10.0",
+    ],
+    lock_file = "//:maven_install.json",
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
+)
+use_repo(maven, "maven")

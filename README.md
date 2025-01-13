@@ -116,7 +116,7 @@ You can pass `javacopts` when building the uber junit test binary using `uber_ja
 ### go_docker_compose_test
 
 ```
-(cd examples && bazel test --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 go-test-image-test)
+(cd examples && bazel test --platforms=@rules_go//go/toolchain:linux_amd64 go-test-image-test)
 ```
 
 In this example, the test source files, dependencies and test image base are passed into the macro. The macro builds a binary containing the test source files and dependencies which are executed as part of the docker-compose test.
