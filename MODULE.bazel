@@ -15,7 +15,7 @@
 
 module(
     name = "rules_docker_compose_test",
-    version = "1.0.0",
+    version = "1.1.0",
 )
 
 bazel_dep(name = "rules_pkg", version = "0.10.1")
