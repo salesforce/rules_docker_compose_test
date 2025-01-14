@@ -15,7 +15,7 @@
 
 services:
   test_container:
-    image: gcr.io/distroless/static-debian12:debug
+    image: ubuntu:25.04
     entrypoint: ["cat", "/resources/generated_file.txt"]
     volumes:
-      - ./src/test/resources:/resources
+      - /tmp/foo:/resources
