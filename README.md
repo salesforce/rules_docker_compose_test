@@ -37,7 +37,7 @@ docker_compose_test(
 ```yaml
 services:
   test_container:
-    image: gcr.io/distroless/static-debian12:debug
+    image: ubuntu:25.04
     entrypoint: ["echo", "Hello World!"]
 ```
 

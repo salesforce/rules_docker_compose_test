@@ -1,4 +1,0 @@
-# we don't want to check-in the generated file
-# because that's what we're actually testing here
-# (that the file is generated when the test is executed).
-generated_file.txt
