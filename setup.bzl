@@ -13,13 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_oci//oci:dependencies.bzl", "rules_oci_dependencies")
-load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
-
-def rules_docker_compose_test_dependencies():
-    rules_oci_dependencies()
-    rules_pkg_dependencies()
-
 def _impl(repository_ctx):
     repository_ctx.file("BUILD.bazel", content = "")
     repository_ctx.file("build_root.bzl", content = "BUILD_WORKSPACE_DIRECTORY = \"%s\"" % repository_ctx.workspace_root)

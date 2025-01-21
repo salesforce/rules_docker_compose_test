@@ -15,12 +15,12 @@
 
 module(
     name = "rules_docker_compose_test",
-    version = "1.1.0",
+    version = "1.2.0",
 )
 
-bazel_dep(name = "rules_pkg", version = "0.10.1")
+bazel_dep(name = "rules_pkg", version = "1.0.1")
 bazel_dep(name = "rules_oci", version = "2.2.0")
-bazel_dep(name = "rules_go", version = "0.50.1")
+bazel_dep(name = "rules_go", version = "0.52.0")
 
 repo_absolute_path = use_repo_rule("//:setup.bzl", "repo_absolute_path")
 
