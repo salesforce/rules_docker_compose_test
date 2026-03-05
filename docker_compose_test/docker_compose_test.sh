@@ -55,7 +55,7 @@ fi
 
 cleanup() {
     echo "Cleaning up docker-compose resources..."
-    docker_compose_down_cmd="$docker_compose_bin -f $ABSOLUTE_COMPOSE_FILE_PATH down --volumes --remove-orphans 2>/dev/null"
+    docker_compose_down_cmd="$docker_compose_bin -f $ABSOLUTE_COMPOSE_FILE_PATH down --volumes --remove-orphans"
     echo "running: $docker_compose_down_cmd"
     echo "$docker_compose_down_cmd" | bash
 }
