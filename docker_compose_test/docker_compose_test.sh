@@ -65,10 +65,17 @@ cleanup() {
 # SIGINT: sent on Ctrl+C.
 trap cleanup EXIT
 
-# bring up compose file & get exit status-code from the integration test container
+# bring up compose file & get exit status-code from the integration test container.
 docker_compose_up_cmd="$docker_compose_bin -f $ABSOLUTE_COMPOSE_FILE_PATH up --abort-on-container-failure --exit-code-from $DOCKER_COMPOSE_TEST_CONTAINER $EXTRA_DOCKER_COMPOSE_UP_ARGS"
 echo "running: $docker_compose_up_cmd"
 echo "$docker_compose_up_cmd" | bash
 result=$?
+
+# Figure out the exit code of the test container incase it never actually started.
+EXIT_CODE=$(docker inspect $(docker compose -f $ABSOLUTE_COMPOSE_FILE_PATH ps -qa $DOCKER_COMPOSE_TEST_CONTAINER) --format='{{.State.ExitCode}}' 2>/dev/null)
+if [ "$EXIT_CODE" != "0" ] || [ -z "$EXIT_CODE" ]; then
+  echo "Error: $DOCKER_COMPOSE_TEST_CONTAINER container failed or never started!"
+  exit 1
+fi
 
 exit $result
