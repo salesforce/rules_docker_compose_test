@@ -72,10 +72,7 @@ echo "$docker_compose_up_cmd" | bash
 result=$?
 
 # Figure out the exit code of the test container incase it never actually started.
-docker_inspect_cmd="$(docker inspect $($docker_compose_bin -f $ABSOLUTE_COMPOSE_FILE_PATH ps -qa $DOCKER_COMPOSE_TEST_CONTAINER) --format='{{.State.ExitCode}}' 2>/dev/null)"
-echo "running: $docker_inspect_cmd"
-echo "$docker_inspect_cmd" | bash
-EXIT_CODE=$?
+EXIT_CODE=$(docker inspect $($docker_compose_bin -f $ABSOLUTE_COMPOSE_FILE_PATH ps -qa $DOCKER_COMPOSE_TEST_CONTAINER) --format='{{.State.ExitCode}}' 2>/dev/null)
 if [ "$EXIT_CODE" != "0" ] || [ -z "$EXIT_CODE" ]; then
   echo "Error: $DOCKER_COMPOSE_TEST_CONTAINER container failed or never started!"
   exit 1
