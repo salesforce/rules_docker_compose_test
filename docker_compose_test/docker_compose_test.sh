@@ -47,15 +47,14 @@ fi
 # if we use the file from inside the sandbox, symlinks will be used for volume mounted files.
 ABSOLUTE_COMPOSE_FILE_PATH=$WORKSPACE_PATH/$DOCKER_COMPOSE_FILE
 
-docker_compose_bin="docker compose"
-docker-compose --version &>/dev/null
-if [ $? -eq 0 ]; then
-    docker_compose_bin="docker-compose"
+docker_compose_bin=(docker compose)
+if command -v docker-compose &>/dev/null; then
+    docker_compose_bin=(docker-compose)
 fi
 
 cleanup() {
     echo "Cleaning up docker-compose resources..."
-    docker_compose_down_cmd="$docker_compose_bin -f $ABSOLUTE_COMPOSE_FILE_PATH down --volumes --remove-orphans"
+    docker_compose_down_cmd="${docker_compose_bin[@]} -f $ABSOLUTE_COMPOSE_FILE_PATH down --volumes --remove-orphans"
     echo "running: $docker_compose_down_cmd"
     echo "$docker_compose_down_cmd" | bash
 }
@@ -66,13 +65,13 @@ cleanup() {
 trap cleanup EXIT
 
 # bring up compose file & get exit status-code from the integration test container.
-docker_compose_up_cmd="$docker_compose_bin -f $ABSOLUTE_COMPOSE_FILE_PATH up --exit-code-from $DOCKER_COMPOSE_TEST_CONTAINER $EXTRA_DOCKER_COMPOSE_UP_ARGS"
+docker_compose_up_cmd="${docker_compose_bin[@]} -f $ABSOLUTE_COMPOSE_FILE_PATH up --exit-code-from $DOCKER_COMPOSE_TEST_CONTAINER $EXTRA_DOCKER_COMPOSE_UP_ARGS"
 echo "running: $docker_compose_up_cmd"
 echo "$docker_compose_up_cmd" | bash
 result=$?
 
 # Figure out the exit code of the test container incase it never actually started.
-EXIT_CODE=$(docker inspect $(docker compose -f $ABSOLUTE_COMPOSE_FILE_PATH ps -qa $DOCKER_COMPOSE_TEST_CONTAINER) --format='{{.State.ExitCode}}' 2>/dev/null)
+EXIT_CODE=$(docker inspect $("${docker_compose_bin[@]}" -f $ABSOLUTE_COMPOSE_FILE_PATH ps -qa $DOCKER_COMPOSE_TEST_CONTAINER) --format='{{.State.ExitCode}}' 2>/dev/null)
 if [ "$EXIT_CODE" != "0" ] || [ -z "$EXIT_CODE" ]; then
   echo "Error: $DOCKER_COMPOSE_TEST_CONTAINER container failed or never started!"
   exit 1
