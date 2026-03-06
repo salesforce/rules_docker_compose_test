@@ -32,6 +32,6 @@ class HelloTest {
         Process process = processBuilder.start();
         int exitValue = process.waitFor();
         assertEquals(0, exitValue);
-        assertTrue("Hello World!".contains("Hello"));
+        assertTrue("Hello World!".contains("Helloo"));
     }
 }
