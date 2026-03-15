@@ -17,6 +17,7 @@ load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load("@repo_absolute_path//:build_root.bzl",  "BUILD_WORKSPACE_DIRECTORY")
 load("@rules_go//go:def.bzl", "go_test")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
+load(":multi_platform.bzl", "multi_platform")
 
 common_tags = [
     "docker", # these tests depend on docker
@@ -63,6 +64,7 @@ def go_docker_compose_test(
     data = [],
     tags = [],
     size = "large",
+    platforms = None,
     **kwargs,
 ):
     tags = common_tags + tags
@@ -79,8 +81,12 @@ def go_docker_compose_test(
         tags = tags + go_test_target_tags,
         testonly = True,
     )
+    if platforms:
+        multi_platform(name = name + ".go__test", actual = name + ".go_test", platforms = platforms, testonly = True)
+    else:
+        native.alias(name = name + ".go__test", actual = name + ".go_test", testonly = True)
 
-    compiled_tests_target = ":" + name + ".go_test"
+    compiled_tests_target = ":" + name + ".go__test"
 
     pkg_tar(
         name = name + ".compiled_go_test_target",
