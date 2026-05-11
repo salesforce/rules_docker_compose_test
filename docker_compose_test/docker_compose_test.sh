@@ -65,16 +65,39 @@ cleanup() {
 trap cleanup EXIT
 
 # bring up compose file & get exit status-code from the integration test container.
-docker_compose_up_cmd="${docker_compose_bin[@]} -f $ABSOLUTE_COMPOSE_FILE_PATH up --exit-code-from $DOCKER_COMPOSE_TEST_CONTAINER $EXTRA_DOCKER_COMPOSE_UP_ARGS"
-echo "running: $docker_compose_up_cmd"
-echo "$docker_compose_up_cmd" | bash
-result=$?
+docker_compose_up_cmd=(
+    "${docker_compose_bin[@]}" 
+    "-f" "$ABSOLUTE_COMPOSE_FILE_PATH" 
+    "up" 
+    "--exit-code-from" "$DOCKER_COMPOSE_TEST_CONTAINER"
+)
+if [ -n "$EXTRA_DOCKER_COMPOSE_UP_ARGS" ]; then
+    docker_compose_up_cmd+=($EXTRA_DOCKER_COMPOSE_UP_ARGS)
+fi
+echo "running: ${docker_compose_up_cmd[@]}"
+"${docker_compose_up_cmd[@]}"
 
-# Figure out the exit code of the test container incase it never actually started.
-EXIT_CODE=$(docker inspect $("${docker_compose_bin[@]}" -f $ABSOLUTE_COMPOSE_FILE_PATH ps -qa $DOCKER_COMPOSE_TEST_CONTAINER) --format='{{.State.ExitCode}}' 2>/dev/null)
-if [ "$EXIT_CODE" != "0" ] || [ -z "$EXIT_CODE" ]; then
-  echo "Error: $DOCKER_COMPOSE_TEST_CONTAINER container failed or never started!"
-  exit 1
+# `docker compose up --exit-code-from` can still exit 0 in edge cases (e.g. the named service never
+# schedules while Compose treats the session as done). Resolve the service container via this compose
+# project and verify it actually exited successfully.
+SERVICE="$DOCKER_COMPOSE_TEST_CONTAINER"
+# ps -a includes exited containers; tolerate ps failure so we still hit the FAIL branch below.
+CID="$("${docker_compose_bin[@]}" -f "$ABSOLUTE_COMPOSE_FILE_PATH" ps -a -q "$SERVICE" 2>/dev/null | head -n 1)" || CID=""
+CID="${CID//$'\r'/}"
+CID="${CID//[[:space:]]/}"
+
+EXIT_CODE="$(
+    [ -n "$CID" ] && docker inspect "$CID" --format '{{.State.ExitCode}}' 2>/dev/null || echo ""
+)"
+STATUS="$(
+    [ -n "$CID" ] && docker inspect "$CID" --format '{{.State.Status}}' 2>/dev/null || echo "not-found"
+)"
+
+if [ "$STATUS" = "exited" ] && [ "$EXIT_CODE" -eq 0 ] 2>/dev/null; then
+    echo "PASS ($SERVICE container exit 0)"
+    exit 0
 fi
 
-exit $result
+echo "FAIL ($SERVICE status=$STATUS exit_code=${EXIT_CODE:-none} cid=${CID:-none})" >&2
+exit 1
+
