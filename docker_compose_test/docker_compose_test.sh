@@ -72,7 +72,8 @@ docker_compose_up_cmd=(
     "--exit-code-from" "$DOCKER_COMPOSE_TEST_CONTAINER"
 )
 if [ -n "$EXTRA_DOCKER_COMPOSE_UP_ARGS" ]; then
-    docker_compose_up_cmd+=($EXTRA_DOCKER_COMPOSE_UP_ARGS)
+    extra_args=($EXTRA_DOCKER_COMPOSE_UP_ARGS)
+    docker_compose_up_cmd+=("${extra_args[@]}")
 fi
 echo "running: ${docker_compose_up_cmd[@]}"
 "${docker_compose_up_cmd[@]}"
