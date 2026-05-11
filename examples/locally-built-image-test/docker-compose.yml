@@ -16,4 +16,4 @@
 services:
   test_container:
     image: locally-built-image:2
-    entrypoint: ["cat", "/files/hello.txt"]
+    entrypoint: ["cat", "/files/helloo.txt"]
