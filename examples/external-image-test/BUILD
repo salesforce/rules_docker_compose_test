@@ -15,8 +15,15 @@
 
 load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", "docker_compose_test")
 
+genrule(
+    name = "hello",
+    outs = ["genrule_hello.txt"],
+    cmd = "echo 'hello world' > $(location genrule_hello.txt)",
+)
+
 docker_compose_test(
     name = "external-image-test",
     docker_compose_file = ":docker-compose.yml",
     docker_compose_test_container = "test_container",
+    data = [":hello"],
 )
