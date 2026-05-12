@@ -55,8 +55,8 @@ echo "RUNFILES_PATH: $RUNFILES_PATH"
 # Execroot path: /private/var/tmp/_bazel_USER/HASH/execroot/_main/...
 
 if [[ "$RUNFILES_PATH" == */sandbox/*/execroot/* ]]; then
-    # Extract the base Bazel path and the part after execroot
-    bazel_base=$(echo "$RUNFILES_PATH" | sed 's|\(/private/var/tmp/_bazel_[^/]*/[^/]*\)/.*|\1|')
+    # Extract the base Bazel path (everything before /sandbox/) and the part after execroot
+    bazel_base=$(echo "$RUNFILES_PATH" | sed 's|\(.*\)/sandbox/.*/execroot.*|\1|')
     after_execroot=$(echo "$RUNFILES_PATH" | sed 's|.*/execroot/\(.*\)|\1|')
     export RUNFILES_PATH="$bazel_base/execroot/$after_execroot"
     echo "RUNFILES_PATH (resolved to execroot): $RUNFILES_PATH"
