@@ -20,5 +20,5 @@ docker_compose_test(
     docker_compose_file = ":docker-compose.yml",
     docker_compose_test_container = "test_container",
     pre_compose_up_script = ":src/test/resources/setup_test.sh",
-    extra_docker_compose_up_args = "--no-color",
+    extra_docker_compose_up_args = "--quiet-pull --no-color",
 )

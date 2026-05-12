@@ -54,9 +54,9 @@ fi
 
 cleanup() {
     echo "Cleaning up docker-compose resources..."
-    docker_compose_down_cmd="${docker_compose_bin[@]} -f $ABSOLUTE_COMPOSE_FILE_PATH down --volumes --remove-orphans"
-    echo "running: $docker_compose_down_cmd"
-    echo "$docker_compose_down_cmd" | bash
+    docker_compose_down_cmd=("${docker_compose_bin[@]}" -f "$ABSOLUTE_COMPOSE_FILE_PATH" down --volumes --remove-orphans)
+    echo "running: ${docker_compose_down_cmd[@]}"
+    "${docker_compose_down_cmd[@]}"
 }
 
 # Ensure cleanup runs on EXIT (covers normal exit, errors, and signals).
@@ -66,14 +66,16 @@ trap cleanup EXIT
 
 # bring up compose file & get exit status-code from the integration test container.
 docker_compose_up_cmd=(
-    "${docker_compose_bin[@]}" 
-    "-f" "$ABSOLUTE_COMPOSE_FILE_PATH" 
-    "up" 
+    "${docker_compose_bin[@]}"
+    "-f" "$ABSOLUTE_COMPOSE_FILE_PATH"
+    "up"
     "--exit-code-from" "$DOCKER_COMPOSE_TEST_CONTAINER"
 )
 if [ -n "$EXTRA_DOCKER_COMPOSE_UP_ARGS" ]; then
-    docker_compose_up_cmd+=($EXTRA_DOCKER_COMPOSE_UP_ARGS)
+    IFS=' ' read -r -a extra_args <<< "$EXTRA_DOCKER_COMPOSE_UP_ARGS"
+    docker_compose_up_cmd+=("${extra_args[@]}")
 fi
+
 echo "running: ${docker_compose_up_cmd[@]}"
 "${docker_compose_up_cmd[@]}"
 
