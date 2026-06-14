@@ -1,0 +1,55 @@
+# Copyright (c) 2024, Salesforce, Inc.
+# SPDX-License-Identifier: Apache-2
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", "go_docker_compose_test")
+
+# As compared to examples/go-test-image-test, this example will succeed on non-linux hosts that run
+# linux-archutecture containers (ie Mac "darwin")
+#
+# This example will compile linux unittests on a non-linux host, build a multi-arch OCI image,and
+# use docker-compose to turn up the appropriate container to execute the corresponding architecture
+# of compiled go testcase.
+#
+# We effectively overrule the default assumption that platform == host platform by providing two
+# choices in a transition defined in multi_platform.bzl which causes the targets to duplicate
+# across platform values and align corresponding platform values.
+# 
+# We do this by:
+# 1. providing a list of platforms to iterate
+# 2. iterating that list in a transition around the `go_test()` target
+#
+# the same `cd examples && bazel test //go-test-image-test-with-platforms` demonstrates
+
+ARCH=["arm64", "x86_64"]
+
+[platform(
+    name = "linux_{}".format(a),
+    constraint_values = [
+        "@platforms//os:linux",  # yes, Mac docker runs linux images
+        "@platforms//cpu:{}".format(a),
+    ],
+) for a in ARCH ]
+
+# The following go_docker_compose_test adds a "platforms" attribute, and pathname-based changes:
+
+go_docker_compose_test(
+    name = "go-test-image-test-with-platforms",
+    docker_compose_file = ":docker-compose.yml",
+    docker_compose_test_container = "test_container",  # container name is subdir:test_container
+    platforms = [ "linux_{}".format(a) for a in ARCH ],  # override default platform==host asusmption
+    test_srcs = [ "example_test.go", "another_test.go" ],
+    test_deps = [],
+    test_image_base = "@ubuntu",
+)
