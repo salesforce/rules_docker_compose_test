@@ -43,6 +43,25 @@ if [[ -n "$PRE_COMPOSE_UP_SCRIPT" ]]; then
     cd $location
 fi
 
+export RUNFILES_PATH=`pwd`
+echo "RUNFILES_PATH: $RUNFILES_PATH"
+
+# The following block allows us to mount files from the runfiles directory into the docker-compose test containers.
+# The runfiles directory in the sandbox contains symlinks to the actual files in the execroot.
+# Docker cannot follow these symlinks when they point into the Bazel sandbox, because
+# Docker runs from the workspace context, not inside the sandbox.
+# We need to resolve sandbox paths to the stable execroot location.
+# Sandbox path: /private/var/tmp/_bazel_USER/HASH/sandbox/darwin-sandbox/NUM/execroot/_main/...
+# Execroot path: /private/var/tmp/_bazel_USER/HASH/execroot/_main/...
+
+if [[ "$RUNFILES_PATH" == */sandbox/*/execroot/* ]]; then
+    # Extract the base Bazel path (everything before /sandbox/) and the part after execroot
+    bazel_base=$(echo "$RUNFILES_PATH" | sed 's|\(.*\)/sandbox/.*/execroot.*|\1|')
+    after_execroot=$(echo "$RUNFILES_PATH" | sed 's|.*/execroot/\(.*\)|\1|')
+    export RUNFILES_PATH="$bazel_base/execroot/$after_execroot"
+    echo "RUNFILES_PATH (resolved to execroot): $RUNFILES_PATH"
+fi
+
 # we need to use the path of the real compose file in the file-tree.
 # if we use the file from inside the sandbox, symlinks will be used for volume mounted files.
 ABSOLUTE_COMPOSE_FILE_PATH=$WORKSPACE_PATH/$DOCKER_COMPOSE_FILE
