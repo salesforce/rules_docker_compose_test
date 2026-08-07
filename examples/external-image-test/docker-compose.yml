@@ -16,6 +16,12 @@
 services:
   test_container:
     image: ubuntu:25.04
-    entrypoint: ["cat", "/resources/hello.txt"]
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        cat /resources/hello.txt
+        cat /generated_resources/genrule_hello.txt
     volumes:
-      - ./src/test/resources:/resources
+      - ./src/test/resources/hello.txt:/resources/hello.txt
+      - ${RUNFILES_PATH}/external-image-test/genrule_hello.txt:/generated_resources/genrule_hello.txt
