@@ -145,11 +145,18 @@ def junit_docker_compose_test(
     data = [],
     tags = [],
     size = "large",
+    exclusive = True,
+    cleanup_script = "",
     **kwargs):
     tags = common_tags + tags
+    test_tags = tags
+    if not exclusive:
+        test_tags = [tag for tag in tags if tag != "exclusive"] + ["no-sandbox"]
     data = data + [ docker_compose_file ]
     if len(pre_compose_up_script):
       data = data + [ pre_compose_up_script ]
+    if len(cleanup_script):
+      data = data + [ cleanup_script ]
 
     if test_image_base == None:
         fail("if you are defining test_srcs, you need to provide a test_image_base")
@@ -220,15 +227,15 @@ def junit_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, name.lower() if not exclusive else "", cleanup_script),
         size = size,
-        tags = tags,
+        tags = test_tags,
         data = data,
         **kwargs,
     )
 
 
-def _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args):
+def _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, docker_compose_project_name = "", cleanup_script = ""):
     env = {
         "WORKSPACE_PATH": BUILD_WORKSPACE_DIRECTORY,
         "DOCKER_COMPOSE_FILE": "$(location " + docker_compose_file + ")",
@@ -237,6 +244,10 @@ def _get_env(docker_compose_file, local_image_targets, docker_compose_test_conta
         "EXTRA_DOCKER_COMPOSE_UP_ARGS": extra_docker_compose_up_args,
     }
 
+    if len(docker_compose_project_name):
+        env["DOCKER_COMPOSE_PROJECT_BASE"] = docker_compose_project_name
     if len(pre_compose_up_script):
         env["PRE_COMPOSE_UP_SCRIPT"] = "$(location " + pre_compose_up_script + ")"
+    if len(cleanup_script):
+        env["CLEANUP_SCRIPT"] = "$(location " + cleanup_script + ")"
     return env

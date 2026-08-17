@@ -14,6 +14,33 @@ The rule brings up the docker-compose file and validates that the exit code of t
 
 This rule only provides a pass/fail result . It doesn't gather coverage information.
 
+## Running tests concurrently
+
+`junit_docker_compose_test` remains exclusive by default. Set
+`exclusive = False` to give each test process an isolated Compose project:
+
+```starlark
+junit_docker_compose_test(
+    name = "integration-test",
+    docker_compose_file = ":docker-compose.yml",
+    docker_compose_test_container = "test_container",
+    exclusive = False,
+    test_image_base = "@openjdk",
+)
+```
+
+The pre-Compose script can use `DOCKER_COMPOSE_PROJECT_NAME` and append Compose
+variables to `DOCKER_COMPOSE_ENV_FILE`. To bound concurrency, add a Bazel named
+resource tag and configure its capacity:
+
+```starlark
+tags = ["resources:docker_compose:1"]
+```
+
+```text
+build --local_resources=docker_compose=4
+```
+
 ## Pre-requisites
 
 You need to have a supported version of `docker` installed for the rule to work. Your version should support `-f` and `wait`. You can check if these options are present by running `docker-compose help`.
@@ -144,6 +171,12 @@ services:
 ## pre_compose_up_script
 
 Sometimes, you may need some logic to run before the compose test containers come up. You can use `pre_compose_up_script` for that purpose. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
+
+## cleanup_script
+
+Use `cleanup_script` on `junit_docker_compose_test` to remove resources created
+by setup hooks. It runs on exit, including failures that occur before Compose
+starts.
 
 ## extra_docker_compose_up_args
 
