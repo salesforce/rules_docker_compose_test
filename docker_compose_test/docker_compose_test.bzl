@@ -48,19 +48,19 @@ def docker_compose_test(
     docker_compose_file,
     docker_compose_test_container,
     pre_compose_up_script = "",
-    post_compose_down_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
     data = [],
     tags = [],
     size = "large",
     exclusive = True,
+    post_compose_down_script = "",
     **kwargs):
     data = _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script)
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, name.lower(), post_compose_down_script),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else name.lower(), post_compose_down_script),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -72,7 +72,6 @@ def go_docker_compose_test(
     docker_compose_file,
     docker_compose_test_container,
     pre_compose_up_script = "",
-    post_compose_down_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
     test_image_base = None,
@@ -83,6 +82,7 @@ def go_docker_compose_test(
     tags = [],
     size = "large",
     exclusive = True,
+    post_compose_down_script = "",
     **kwargs,
 ):
     build_tags = common_tags + tags
@@ -140,7 +140,7 @@ def go_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, name.lower(), post_compose_down_script),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else name.lower(), post_compose_down_script),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -238,7 +238,7 @@ def junit_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, name.lower(), post_compose_down_script),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else name.lower(), post_compose_down_script),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
