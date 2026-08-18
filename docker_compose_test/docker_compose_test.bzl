@@ -24,27 +24,45 @@ common_tags = [
     "external",  # test has an external dependency; disable test caching
 ]
 
+def _test_tags(tags, exclusive):
+    # When exclusive = False, tests run concurrently and coordinate through a
+    # daemon-global image-load lock in the host's temp dir. The sandbox would
+    # give each test action a private temp dir and break that coordination, so
+    # non-exclusive tests opt out with no-sandbox. Exclusive tests keep the
+    # default (sandboxed) behaviour.
+    tags = common_tags + tags
+    if exclusive:
+        return tags
+    return [tag for tag in tags if tag != "exclusive"] + ["no-sandbox"]
+
+def _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script):
+    data = data + [ docker_compose_file ]
+    if len(pre_compose_up_script):
+      data = data + [ pre_compose_up_script ]
+    if len(post_compose_down_script):
+      data = data + [ post_compose_down_script ]
+    return data
+
 def docker_compose_test(
     name,
     docker_compose_file,
     docker_compose_test_container,
     pre_compose_up_script = "",
+    post_compose_down_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
     data = [],
     tags = [],
     size = "large",
+    exclusive = True,
     **kwargs):
-    tags = common_tags + tags
-    data = data + [ docker_compose_file ]
-    if len(pre_compose_up_script):
-      data = data + [ pre_compose_up_script ]
+    data = _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script)
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, name.lower(), post_compose_down_script),
         size = size,
-        tags = tags,
+        tags = _test_tags(tags, exclusive),
         data = data,
         **kwargs,
     )
@@ -54,6 +72,7 @@ def go_docker_compose_test(
     docker_compose_file,
     docker_compose_test_container,
     pre_compose_up_script = "",
+    post_compose_down_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
     test_image_base = None,
@@ -63,12 +82,11 @@ def go_docker_compose_test(
     data = [],
     tags = [],
     size = "large",
+    exclusive = True,
     **kwargs,
 ):
-    tags = common_tags + tags
-    data = data + [ docker_compose_file ]
-    if len(pre_compose_up_script):
-      data = data + [ pre_compose_up_script ]
+    build_tags = common_tags + tags
+    data = _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script)
     if test_image_base == None:
         fail("if you are defining test_srcs, you need to provide a test_image_base")
 
@@ -76,7 +94,7 @@ def go_docker_compose_test(
         name = name + ".go_test",
         srcs = test_srcs,
         deps = test_deps,
-        tags = tags + go_test_target_tags,
+        tags = build_tags + go_test_target_tags,
         testonly = True,
     )
 
@@ -86,7 +104,7 @@ def go_docker_compose_test(
         name = name + ".compiled_go_test_target",
         srcs = [compiled_tests_target],
         package_dir = "/tests",
-        tags = tags,
+        tags = build_tags,
         testonly = True,
     )
 
@@ -96,7 +114,7 @@ def go_docker_compose_test(
         tars = [
           name + ".compiled_go_test_target",
         ],
-        tags = tags,
+        tags = build_tags,
         testonly = True,
     )
 
@@ -104,7 +122,7 @@ def go_docker_compose_test(
         name = docker_compose_test_container,
         image = name + ".oci_image",
         repo_tags = ["%s:%s" % (native.package_name(), docker_compose_test_container)],
-        tags = tags,
+        tags = build_tags,
         testonly = True,
     )
 
@@ -122,9 +140,9 @@ def go_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, name.lower(), post_compose_down_script),
         size = size,
-        tags = tags,
+        tags = _test_tags(tags, exclusive),
         data = data,
         **kwargs,
     )
@@ -145,11 +163,11 @@ def junit_docker_compose_test(
     data = [],
     tags = [],
     size = "large",
+    exclusive = True,
+    post_compose_down_script = "",
     **kwargs):
-    tags = common_tags + tags
-    data = data + [ docker_compose_file ]
-    if len(pre_compose_up_script):
-      data = data + [ pre_compose_up_script ]
+    build_tags = common_tags + tags
+    data = _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script)
 
     if test_image_base == None:
         fail("if you are defining test_srcs, you need to provide a test_image_base")
@@ -194,7 +212,7 @@ def junit_docker_compose_test(
           name + "_required_classpath_jars_tar",
           name + "_test_container_entrypoint",
         ],
-        tags = tags,
+        tags = build_tags,
         testonly = True,
     )
 
@@ -202,7 +220,7 @@ def junit_docker_compose_test(
         name = docker_compose_test_container,
         image = name.lower() + "_java_image",
         repo_tags = ["%s:%s" % (native.package_name(), docker_compose_test_container)],
-        tags = tags,
+        tags = build_tags,
         testonly = True,
     )
 
@@ -220,15 +238,15 @@ def junit_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, name.lower(), post_compose_down_script),
         size = size,
-        tags = tags,
+        tags = _test_tags(tags, exclusive),
         data = data,
         **kwargs,
     )
 
 
-def _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args):
+def _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, docker_compose_project_name = "", post_compose_down_script = ""):
     env = {
         "WORKSPACE_PATH": BUILD_WORKSPACE_DIRECTORY,
         "DOCKER_COMPOSE_FILE": "$(location " + docker_compose_file + ")",
@@ -237,6 +255,10 @@ def _get_env(docker_compose_file, local_image_targets, docker_compose_test_conta
         "EXTRA_DOCKER_COMPOSE_UP_ARGS": extra_docker_compose_up_args,
     }
 
+    if len(docker_compose_project_name):
+        env["DOCKER_COMPOSE_PROJECT_BASE"] = docker_compose_project_name
     if len(pre_compose_up_script):
         env["PRE_COMPOSE_UP_SCRIPT"] = "$(location " + pre_compose_up_script + ")"
+    if len(post_compose_down_script):
+        env["POST_COMPOSE_DOWN_SCRIPT"] = "$(location " + post_compose_down_script + ")"
     return env

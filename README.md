@@ -14,6 +14,38 @@ The rule brings up the docker-compose file and validates that the exit code of t
 
 This rule only provides a pass/fail result . It doesn't gather coverage information.
 
+## Running tests concurrently
+
+All three macros (`docker_compose_test`, `go_docker_compose_test`,
+`junit_docker_compose_test`) are exclusive by default. Set `exclusive = False`
+to give each test an isolated Compose project so multiple tests can run at the
+same time without sharing containers, networks, or volumes:
+
+```starlark
+junit_docker_compose_test(
+    name = "integration-test",
+    docker_compose_file = ":docker-compose.yml",
+    docker_compose_test_container = "test_container",
+    exclusive = False,
+    test_image_base = "@openjdk",
+)
+```
+
+The pre-Compose script can use `DOCKER_COMPOSE_PROJECT_NAME` and append Compose
+variables to `DOCKER_COMPOSE_ENV_FILE`. To bound concurrency, add a Bazel named
+resource tag and configure its capacity:
+
+```starlark
+tags = ["resources:docker_compose:1"]
+```
+
+```text
+test --local_resources=docker_compose=4
+```
+
+See [examples/non-exclusive-test](examples/non-exclusive-test) for a runnable
+example.
+
 ## Pre-requisites
 
 You need to have a supported version of `docker` installed for the rule to work. Your version should support `-f` and `wait`. You can check if these options are present by running `docker-compose help`.
@@ -144,6 +176,13 @@ services:
 ## pre_compose_up_script
 
 Sometimes, you may need some logic to run before the compose test containers come up. You can use `pre_compose_up_script` for that purpose. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
+
+## post_compose_down_script
+
+Use `post_compose_down_script` to remove resources created by setup hooks. It
+runs after `docker compose down`, on success, failure, and termination —
+including failures that occur before Compose starts. It corresponds to
+`pre_compose_up_script` and is available on all three macros.
 
 ## extra_docker_compose_up_args
 

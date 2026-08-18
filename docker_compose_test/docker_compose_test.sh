@@ -15,6 +15,66 @@
 
 # we should not use "set -e" here because we want the docker-compose down to happen at the end regardless of failure/success.
 
+# A project name opts this test into isolated Compose resources.
+if [[ -n "${DOCKER_COMPOSE_PROJECT_BASE:-}" ]]; then
+    if [[ ! "$DOCKER_COMPOSE_PROJECT_BASE" =~ ^[a-z0-9][a-z0-9_-]*$ ]]; then
+        echo "[ERROR] docker_compose_project_name must match [a-z0-9][a-z0-9_-]*" >&2
+        exit 1
+    fi
+    DOCKER_COMPOSE_PROJECT_NAME="${DOCKER_COMPOSE_PROJECT_BASE}_${TEST_SHARD_INDEX:-0}_${TEST_RUN_NUMBER:-1}_$$"
+    DOCKER_COMPOSE_ENV_FILE="${TEST_TMPDIR:-${TMPDIR:-/tmp}}/docker-compose-${DOCKER_COMPOSE_PROJECT_NAME}.env"
+    : > "$DOCKER_COMPOSE_ENV_FILE" || exit 1
+    export DOCKER_COMPOSE_PROJECT_NAME
+    export DOCKER_COMPOSE_ENV_FILE
+fi
+
+run_post_compose_down_script() {
+    if [[ -n "${POST_COMPOSE_DOWN_SCRIPT:-}" ]]; then
+        location=$(pwd)
+        cd "$WORKSPACE_PATH"
+        cd "$(dirname "$POST_COMPOSE_DOWN_SCRIPT")"
+        "./$(basename "$POST_COMPOSE_DOWN_SCRIPT")"
+        cd "$location"
+    fi
+}
+
+# Docker image tags are daemon-global. Keep parallel tests from loading and
+# resolving the same tag at the same time; Compose execution remains parallel.
+image_load_lock="/tmp/rules_docker_compose_test-image-load-$(id -u).lock"
+image_load_lock_held=false
+
+release_image_load_lock() {
+    if [[ "$image_load_lock_held" == "true" ]]; then
+        if [[ "$(readlink "$image_load_lock" 2>/dev/null)" == "$$" ]]; then
+            rm -f "$image_load_lock"
+        fi
+        image_load_lock_held=false
+    fi
+}
+
+acquire_image_load_lock() {
+    local owner_pid=""
+    until ln -s "$$" "$image_load_lock" 2>/dev/null; do
+        owner_pid="$(readlink "$image_load_lock" 2>/dev/null)"
+        if [[ "$owner_pid" =~ ^[0-9]+$ ]] && ! kill -0 "$owner_pid" 2>/dev/null; then
+            rm -f "$image_load_lock"
+            continue
+        fi
+        sleep 1
+    done
+    image_load_lock_held=true
+}
+
+early_cleanup() {
+    release_image_load_lock
+    run_post_compose_down_script
+}
+trap early_cleanup EXIT
+
+if [[ -n "${DOCKER_COMPOSE_PROJECT_NAME:-}" ]]; then
+    acquire_image_load_lock || exit 1
+fi
+
 # start by building any local images that are needed for the docker-compose tests
 export IFS=","
 echo $LOCAL_IMAGE_TARGETS
@@ -42,6 +102,7 @@ if [[ -n "$PRE_COMPOSE_UP_SCRIPT" ]]; then
     $(basename $PRE_COMPOSE_UP_SCRIPT)
     cd $location
 fi
+release_image_load_lock
 
 # we need to use the path of the real compose file in the file-tree.
 # if we use the file from inside the sandbox, symlinks will be used for volume mounted files.
@@ -52,11 +113,17 @@ if command -v docker-compose &>/dev/null; then
     docker_compose_bin=(docker-compose)
 fi
 
+docker_compose_cmd=("${docker_compose_bin[@]}")
+if [[ -n "${DOCKER_COMPOSE_PROJECT_NAME:-}" ]]; then
+    docker_compose_cmd+=(--project-name "$DOCKER_COMPOSE_PROJECT_NAME" --env-file "$DOCKER_COMPOSE_ENV_FILE")
+fi
+
 cleanup() {
     echo "Cleaning up docker-compose resources..."
-    docker_compose_down_cmd=("${docker_compose_bin[@]}" -f "$ABSOLUTE_COMPOSE_FILE_PATH" down --volumes --remove-orphans)
+    docker_compose_down_cmd=("${docker_compose_cmd[@]}" -f "$ABSOLUTE_COMPOSE_FILE_PATH" down --volumes --remove-orphans)
     echo "running: ${docker_compose_down_cmd[@]}"
     "${docker_compose_down_cmd[@]}"
+    run_post_compose_down_script
 }
 
 # Ensure cleanup runs on EXIT (covers normal exit, errors, and signals).
@@ -66,7 +133,7 @@ trap cleanup EXIT
 
 # bring up compose file & get exit status-code from the integration test container.
 docker_compose_up_cmd=(
-    "${docker_compose_bin[@]}"
+    "${docker_compose_cmd[@]}"
     "-f" "$ABSOLUTE_COMPOSE_FILE_PATH"
     "up"
     "--exit-code-from" "$DOCKER_COMPOSE_TEST_CONTAINER"
@@ -84,7 +151,7 @@ echo "running: ${docker_compose_up_cmd[@]}"
 # project and verify it actually exited successfully.
 SERVICE="$DOCKER_COMPOSE_TEST_CONTAINER"
 # ps -a includes exited containers; tolerate ps failure so we still hit the FAIL branch below.
-CID="$("${docker_compose_bin[@]}" -f "$ABSOLUTE_COMPOSE_FILE_PATH" ps -a -q "$SERVICE" 2>/dev/null | head -n 1)" || CID=""
+CID="$("${docker_compose_cmd[@]}" -f "$ABSOLUTE_COMPOSE_FILE_PATH" ps -a -q "$SERVICE" 2>/dev/null | head -n 1)" || CID=""
 CID="${CID//$'\r'/}"
 CID="${CID//[[:space:]]/}"
 
@@ -102,4 +169,3 @@ fi
 
 echo "FAIL ($SERVICE status=$STATUS exit_code=${EXIT_CODE:-none} cid=${CID:-none})" >&2
 exit 1
-
