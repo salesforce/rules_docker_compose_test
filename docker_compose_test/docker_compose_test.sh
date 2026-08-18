@@ -69,7 +69,7 @@ early_cleanup() {
 trap early_cleanup EXIT
 
 if [[ -n "${DOCKER_COMPOSE_PROJECT_NAME:-}" ]]; then
-    acquire_image_load_lock || exit 1
+    acquire_image_load_lock
 fi
 
 # start by building any local images that are needed for the docker-compose tests
@@ -87,6 +87,10 @@ for LOCAL_IMAGE_TARGET in $LOCAL_IMAGE_TARGETS; do
         exit 1
     fi
 done
+# The lock only guards docker image loads. Release it before running the
+# user's pre-compose script so their setup work (mkdir, curl, seeding, etc.)
+# doesn't serialize across parallel tests.
+release_image_load_lock
 
 # PRE_COMPOSE_UP_SCRIPT is set
 if [[ -n "$PRE_COMPOSE_UP_SCRIPT" ]]; then
@@ -99,7 +103,6 @@ if [[ -n "$PRE_COMPOSE_UP_SCRIPT" ]]; then
     $(basename $PRE_COMPOSE_UP_SCRIPT)
     cd $location
 fi
-release_image_load_lock
 
 # we need to use the path of the real compose file in the file-tree.
 # if we use the file from inside the sandbox, symlinks will be used for volume mounted files.
