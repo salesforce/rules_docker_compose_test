@@ -15,12 +15,9 @@
 
 # we should not use "set -e" here because we want the docker-compose down to happen at the end regardless of failure/success.
 
-# A project name opts this test into isolated Compose resources.
+# A project name opts this test into isolated Compose resources. The base is
+# sanitized in Starlark to satisfy Compose's naming rules.
 if [[ -n "${DOCKER_COMPOSE_PROJECT_BASE:-}" ]]; then
-    if [[ ! "$DOCKER_COMPOSE_PROJECT_BASE" =~ ^[a-z0-9][a-z0-9_-]*$ ]]; then
-        echo "[ERROR] docker_compose_project_name must match [a-z0-9][a-z0-9_-]*" >&2
-        exit 1
-    fi
     DOCKER_COMPOSE_PROJECT_NAME="${DOCKER_COMPOSE_PROJECT_BASE}_${TEST_SHARD_INDEX:-0}_${TEST_RUN_NUMBER:-1}_$$"
     DOCKER_COMPOSE_ENV_FILE="${TEST_TMPDIR:-${TMPDIR:-/tmp}}/docker-compose-${DOCKER_COMPOSE_PROJECT_NAME}.env"
     : > "$DOCKER_COMPOSE_ENV_FILE" || exit 1

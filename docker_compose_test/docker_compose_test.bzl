@@ -35,6 +35,17 @@ def _test_tags(tags, exclusive):
         return tags
     return [tag for tag in tags if tag != "exclusive"] + ["no-sandbox"]
 
+_PROJECT_NAME_ALLOWED = "abcdefghijklmnopqrstuvwxyz0123456789-_"
+
+def _project_base_from_name(name):
+    # Docker Compose project names accept [a-z0-9_-] and must start with an
+    # alphanumeric. Bazel target names allow more (e.g. '.'), so map anything
+    # out of range to '_' and prepend 't_' if the first char isn't alphanumeric.
+    sanitized = "".join([c if c in _PROJECT_NAME_ALLOWED else "_" for c in name.lower().elems()])
+    if not sanitized or sanitized[0] == "-" or sanitized[0] == "_":
+        sanitized = "t_" + sanitized
+    return sanitized
+
 def _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script):
     data = data + [ docker_compose_file ]
     if len(pre_compose_up_script):
@@ -60,7 +71,7 @@ def docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else name.lower(), post_compose_down_script),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -140,7 +151,7 @@ def go_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else name.lower(), post_compose_down_script),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -238,7 +249,7 @@ def junit_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else name.lower(), post_compose_down_script),
+        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
