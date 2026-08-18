@@ -1,3 +1,8 @@
 common --test_output=errors
 common --verbose_explanations
 common --lockfile_mode=off
+
+# Cap the named "docker_compose" resource used by the non-exclusive-test example.
+# Tests tagged resources:docker_compose:1 each consume one unit, so at most two
+# run concurrently regardless of how many are requested.
+test --local_resources=docker_compose=2

@@ -28,12 +28,12 @@ if [[ -n "${DOCKER_COMPOSE_PROJECT_BASE:-}" ]]; then
     export DOCKER_COMPOSE_ENV_FILE
 fi
 
-run_cleanup_script() {
-    if [[ -n "${CLEANUP_SCRIPT:-}" ]]; then
+run_post_compose_down_script() {
+    if [[ -n "${POST_COMPOSE_DOWN_SCRIPT:-}" ]]; then
         location=$(pwd)
         cd "$WORKSPACE_PATH"
-        cd "$(dirname "$CLEANUP_SCRIPT")"
-        "./$(basename "$CLEANUP_SCRIPT")"
+        cd "$(dirname "$POST_COMPOSE_DOWN_SCRIPT")"
+        "./$(basename "$POST_COMPOSE_DOWN_SCRIPT")"
         cd "$location"
     fi
 }
@@ -67,7 +67,7 @@ acquire_image_load_lock() {
 
 early_cleanup() {
     release_image_load_lock
-    run_cleanup_script
+    run_post_compose_down_script
 }
 trap early_cleanup EXIT
 
@@ -123,7 +123,7 @@ cleanup() {
     docker_compose_down_cmd=("${docker_compose_cmd[@]}" -f "$ABSOLUTE_COMPOSE_FILE_PATH" down --volumes --remove-orphans)
     echo "running: ${docker_compose_down_cmd[@]}"
     "${docker_compose_down_cmd[@]}"
-    run_cleanup_script
+    run_post_compose_down_script
 }
 
 # Ensure cleanup runs on EXIT (covers normal exit, errors, and signals).

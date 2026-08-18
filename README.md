@@ -16,8 +16,10 @@ This rule only provides a pass/fail result . It doesn't gather coverage informat
 
 ## Running tests concurrently
 
-`junit_docker_compose_test` remains exclusive by default. Set
-`exclusive = False` to give each test process an isolated Compose project:
+All three macros (`docker_compose_test`, `go_docker_compose_test`,
+`junit_docker_compose_test`) are exclusive by default. Set `exclusive = False`
+to give each test an isolated Compose project so multiple tests can run at the
+same time without sharing containers, networks, or volumes:
 
 ```starlark
 junit_docker_compose_test(
@@ -38,8 +40,11 @@ tags = ["resources:docker_compose:1"]
 ```
 
 ```text
-build --local_resources=docker_compose=4
+test --local_resources=docker_compose=4
 ```
+
+See [examples/non-exclusive-test](examples/non-exclusive-test) for a runnable
+example.
 
 ## Pre-requisites
 
@@ -172,11 +177,12 @@ services:
 
 Sometimes, you may need some logic to run before the compose test containers come up. You can use `pre_compose_up_script` for that purpose. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
 
-## cleanup_script
+## post_compose_down_script
 
-Use `cleanup_script` on `junit_docker_compose_test` to remove resources created
-by setup hooks. It runs on exit, including failures that occur before Compose
-starts.
+Use `post_compose_down_script` to remove resources created by setup hooks. It
+runs after `docker compose down`, on success, failure, and termination —
+including failures that occur before Compose starts. It corresponds to
+`pre_compose_up_script` and is available on all three macros.
 
 ## extra_docker_compose_up_args
 
