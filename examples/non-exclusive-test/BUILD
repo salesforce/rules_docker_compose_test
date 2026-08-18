@@ -28,13 +28,15 @@ load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", 
 #   failure, or termination -- useful for tearing down anything a
 #   pre_compose_up_script created.
 
+# INTENTIONALLY FAILING -- do NOT merge this change.
+# `-a` is pointed at a compose file whose container exits 1 to verify the
+# rule still surfaces failures. `-b` must still pass, proving the failure
+# is isolated to the failing project.
 docker_compose_test(
     name = "non-exclusive-test-a",
-    docker_compose_file = ":docker-compose.yml",
+    docker_compose_file = ":docker-compose-failing.yml",
     docker_compose_test_container = "test_container",
     exclusive = False,
-    pre_compose_up_script = ":src/test/resources/setup_test.sh",
-    post_compose_down_script = ":src/test/resources/teardown_test.sh",
     tags = ["resources:docker_compose:1"],
 )
 
