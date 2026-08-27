@@ -104,9 +104,22 @@ if [[ -n "$PRE_COMPOSE_UP_SCRIPT" ]]; then
     cd $location
 fi
 
-# we need to use the path of the real compose file in the file-tree.
-# if we use the file from inside the sandbox, symlinks will be used for volume mounted files.
-ABSOLUTE_COMPOSE_FILE_PATH=$WORKSPACE_PATH/$DOCKER_COMPOSE_FILE
+# DOCKER_COMPOSE_FILES is a newline-separated list of compose file paths
+# (Bazel-resolved via $(location ...) at analysis time). We need the paths
+# in the real file-tree (not the sandbox) so `docker compose` sees the
+# same volume-mount source paths a developer would if they ran compose by
+# hand. Build a compose_file_args array to pass to every `docker compose`
+# invocation as a repeated `-f <abs-path>` sequence.
+#
+# Compose merges multiple `-f` files with well-defined semantics: later
+# files override earlier files, scalars replace, maps merge by key,
+# sequences replace wholesale. See
+# https://docs.docker.com/reference/compose-file/merge/.
+compose_file_args=()
+while IFS= read -r compose_file; do
+    [ -z "$compose_file" ] && continue
+    compose_file_args+=("-f" "$WORKSPACE_PATH/$compose_file")
+done <<< "$DOCKER_COMPOSE_FILES"
 
 docker_compose_bin=(docker compose)
 if command -v docker-compose &>/dev/null; then
@@ -120,7 +133,7 @@ fi
 
 cleanup() {
     echo "Cleaning up docker-compose resources..."
-    docker_compose_down_cmd=("${docker_compose_cmd[@]}" -f "$ABSOLUTE_COMPOSE_FILE_PATH" down --volumes --remove-orphans)
+    docker_compose_down_cmd=("${docker_compose_cmd[@]}" "${compose_file_args[@]}" down --volumes --remove-orphans)
     echo "running: ${docker_compose_down_cmd[@]}"
     "${docker_compose_down_cmd[@]}"
     run_post_compose_down_script
@@ -131,10 +144,10 @@ cleanup() {
 # SIGINT: sent on Ctrl+C.
 trap cleanup EXIT
 
-# bring up compose file & get exit status-code from the integration test container.
+# bring up compose file(s) & get exit status-code from the integration test container.
 docker_compose_up_cmd=(
     "${docker_compose_cmd[@]}"
-    "-f" "$ABSOLUTE_COMPOSE_FILE_PATH"
+    "${compose_file_args[@]}"
     "up"
     "--exit-code-from" "$DOCKER_COMPOSE_TEST_CONTAINER"
 )
@@ -151,7 +164,7 @@ echo "running: ${docker_compose_up_cmd[@]}"
 # project and verify it actually exited successfully.
 SERVICE="$DOCKER_COMPOSE_TEST_CONTAINER"
 # ps -a includes exited containers; tolerate ps failure so we still hit the FAIL branch below.
-CID="$("${docker_compose_cmd[@]}" -f "$ABSOLUTE_COMPOSE_FILE_PATH" ps -a -q "$SERVICE" 2>/dev/null | head -n 1)" || CID=""
+CID="$("${docker_compose_cmd[@]}" "${compose_file_args[@]}" ps -a -q "$SERVICE" 2>/dev/null | head -n 1)" || CID=""
 CID="${CID//$'\r'/}"
 CID="${CID//[[:space:]]/}"
 

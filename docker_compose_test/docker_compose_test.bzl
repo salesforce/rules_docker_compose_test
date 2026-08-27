@@ -46,8 +46,22 @@ def _project_base_from_name(name):
         sanitized = "t_" + sanitized
     return sanitized
 
-def _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script):
-    data = data + [ docker_compose_file ]
+def _resolve_compose_files(docker_compose_file, docker_compose_files):
+    # Normalize the singular + plural compose-file attrs into one list.
+    # Exactly one must be set; the singular attr becomes a one-element list.
+    # Order in `docker_compose_files` is preserved through to `docker compose
+    # -f <file>` in the same order: later files override earlier files per
+    # Compose's multi-file merge semantics.
+    if docker_compose_file != None and len(docker_compose_files):
+        fail("docker_compose_test: set either docker_compose_file (singular) or docker_compose_files (list), not both")
+    if docker_compose_file != None:
+        return [docker_compose_file]
+    if len(docker_compose_files):
+        return docker_compose_files
+    fail("docker_compose_test: one of docker_compose_file or docker_compose_files must be set")
+
+def _test_data(data, compose_files, pre_compose_up_script, post_compose_down_script):
+    data = data + compose_files
     if len(pre_compose_up_script):
       data = data + [ pre_compose_up_script ]
     if len(post_compose_down_script):
@@ -56,8 +70,9 @@ def _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_do
 
 def docker_compose_test(
     name,
-    docker_compose_file,
-    docker_compose_test_container,
+    docker_compose_file = None,
+    docker_compose_files = [],
+    docker_compose_test_container = None,
     pre_compose_up_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
@@ -67,11 +82,12 @@ def docker_compose_test(
     exclusive = True,
     post_compose_down_script = "",
     **kwargs):
-    data = _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script)
+    compose_files = _resolve_compose_files(docker_compose_file, docker_compose_files)
+    data = _test_data(data, compose_files, pre_compose_up_script, post_compose_down_script)
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
+        env = _get_env(compose_files, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -80,8 +96,9 @@ def docker_compose_test(
 
 def go_docker_compose_test(
     name,
-    docker_compose_file,
-    docker_compose_test_container,
+    docker_compose_file = None,
+    docker_compose_files = [],
+    docker_compose_test_container = None,
     pre_compose_up_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
@@ -96,8 +113,9 @@ def go_docker_compose_test(
     post_compose_down_script = "",
     **kwargs,
 ):
+    compose_files = _resolve_compose_files(docker_compose_file, docker_compose_files)
     build_tags = common_tags + tags
-    data = _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script)
+    data = _test_data(data, compose_files, pre_compose_up_script, post_compose_down_script)
     if test_image_base == None:
         fail("if you are defining test_srcs, you need to provide a test_image_base")
 
@@ -151,7 +169,7 @@ def go_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
+        env = _get_env(compose_files, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -161,8 +179,9 @@ def go_docker_compose_test(
 
 def junit_docker_compose_test(
     name,
-    docker_compose_file,
-    docker_compose_test_container,
+    docker_compose_file = None,
+    docker_compose_files = [],
+    docker_compose_test_container = None,
     pre_compose_up_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
@@ -177,8 +196,9 @@ def junit_docker_compose_test(
     exclusive = True,
     post_compose_down_script = "",
     **kwargs):
+    compose_files = _resolve_compose_files(docker_compose_file, docker_compose_files)
     build_tags = common_tags + tags
-    data = _test_data(data, docker_compose_file, pre_compose_up_script, post_compose_down_script)
+    data = _test_data(data, compose_files, pre_compose_up_script, post_compose_down_script)
 
     if test_image_base == None:
         fail("if you are defining test_srcs, you need to provide a test_image_base")
@@ -249,7 +269,7 @@ def junit_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
+        env = _get_env(compose_files, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -257,10 +277,18 @@ def junit_docker_compose_test(
     )
 
 
-def _get_env(docker_compose_file, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, docker_compose_project_name = "", post_compose_down_script = ""):
+def _get_env(compose_files, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, docker_compose_project_name = "", post_compose_down_script = ""):
+    # Compose files are passed as a newline-separated list so the shell
+    # script can iterate without shell-metachar hazards on individual paths.
+    # `$(location ...)` is expanded at analysis time so the shell sees the
+    # Bazel-resolved runfiles path, not the label string.
+    locations = [
+        "$(location " + f + ")"
+        for f in compose_files
+    ]
     env = {
         "WORKSPACE_PATH": BUILD_WORKSPACE_DIRECTORY,
-        "DOCKER_COMPOSE_FILE": "$(location " + docker_compose_file + ")",
+        "DOCKER_COMPOSE_FILES": "\n".join(locations),
         "LOCAL_IMAGE_TARGETS": local_image_targets.replace(":", "/"),
         "DOCKER_COMPOSE_TEST_CONTAINER": docker_compose_test_container,
         "EXTRA_DOCKER_COMPOSE_UP_ARGS": extra_docker_compose_up_args,
