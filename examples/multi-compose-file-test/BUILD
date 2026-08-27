@@ -16,9 +16,8 @@
 load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", "docker_compose_test")
 
 # Demonstrates docker_compose_files (plural). Files are passed to
-# `docker compose -f a -f b` in list order; Compose deep-merges them,
-# with later files overriding earlier ones (scalars replace, maps merge
-# by key, sequences replace wholesale).
+# `docker compose -f a -f b` in list order; later files override earlier
+# ones per Compose's merge rules.
 #
 # base.yml declares a `test_container` service whose entrypoint exits 1
 # (so a run of just the base would fail). override.yml patches the

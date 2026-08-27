@@ -111,10 +111,9 @@ fi
 # hand. Build a compose_file_args array to pass to every `docker compose`
 # invocation as a repeated `-f <abs-path>` sequence.
 #
-# Compose merges multiple `-f` files with well-defined semantics: later
-# files override earlier files, scalars replace, maps merge by key,
-# sequences replace wholesale. See
-# https://docs.docker.com/reference/compose-file/merge/.
+# Files are passed to Compose in list order; later files override
+# earlier ones. See https://docs.docker.com/reference/compose-file/merge/
+# for Compose's merge rules.
 compose_file_args=()
 while IFS= read -r compose_file; do
     [ -z "$compose_file" ] && continue

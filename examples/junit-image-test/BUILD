@@ -17,7 +17,7 @@ load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", 
 
 junit_docker_compose_test(
     name = "junit-image-test",
-    docker_compose_file = ":docker-compose.yml",
+    docker_compose_files = [":docker-compose.yml"],
     docker_compose_test_container = "test_container",
     test_srcs = glob(["**/*Test.java"]),
     test_deps = ["@maven//:org_junit_jupiter_junit_jupiter_api"],

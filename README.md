@@ -8,7 +8,7 @@ Check the [latest release](https://github.com/salesforce/rules_docker_compose_te
 
 ## How does it work?
 
-The rule brings up the docker-compose file and validates that the exit code of the test container is `0`.
+The rule brings up the docker-compose file(s) and validates that the exit code of the test container is `0`.
 
 ## Constraints
 
@@ -24,7 +24,7 @@ same time without sharing containers, networks, or volumes:
 ```starlark
 junit_docker_compose_test(
     name = "integration-test",
-    docker_compose_file = ":docker-compose.yml",
+    docker_compose_files = [":docker-compose.yml"],
     docker_compose_test_container = "test_container",
     exclusive = False,
     test_image_base = "@openjdk",
@@ -61,7 +61,7 @@ In this example, the `docker_compose_test` does not actually depend on an image 
 ```starlark
 docker_compose_test(
     name = "junit-image-test",
-    docker_compose_file = ":docker-compose.yml",
+    docker_compose_files = [":docker-compose.yml"],
     docker_compose_test_container = "test_container",
 )
 ```
@@ -94,7 +94,7 @@ sh_binary(
 
 docker_compose_test(
     name = "locally-built-image-test",
-    docker_compose_file = ":docker-compose.yml",
+    docker_compose_files = [":docker-compose.yml"],
     docker_compose_test_container = "test_container",
     local_image_targets = "locally-built-image-test:tarball",
     data = [":docker_image_fixture"],
@@ -121,7 +121,7 @@ load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", 
 
 junit_docker_compose_test(
     name = "junit-image-test",
-    docker_compose_file = ":docker-compose.yml",
+    docker_compose_files = [":docker-compose.yml"],
     docker_compose_test_container = "test_container",
     test_srcs = glob(["**/*Test.java"]),
     test_deps = ["@maven//:org_junit_jupiter_junit_jupiter_api"],
@@ -158,7 +158,7 @@ load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", 
 
 go_docker_compose_test(
     name = "go-test-image-test",
-    docker_compose_file = ":docker-compose.yml",
+    docker_compose_files = [":docker-compose.yml"],
     docker_compose_test_container = "test_container",
     test_srcs = glob(["**/*_test.go"]),
     test_deps = [],
@@ -172,6 +172,37 @@ services:
     image: go-test-image-test:test_container
     entrypoint: ["tests/go-test-image-test.go_test"]
 ```
+
+## Composing multiple compose files
+
+`docker_compose_files` accepts a list, so a family of tests that shares most
+of a Compose topology can factor the shared services into a base file and
+layer per-scenario overrides on top:
+
+```starlark
+docker_compose_test(
+    name = "multi-compose-file-test",
+    docker_compose_files = [
+        ":base.yml",
+        ":override.yml",
+    ],
+    docker_compose_test_container = "test_container",
+)
+```
+
+Files are passed to `docker compose -f a -f b [-f c ...]` in list order, so
+later files override earlier ones. See Compose's
+[multi-file merge semantics](https://docs.docker.com/reference/compose-file/merge/)
+for the exact rules.
+
+See [examples/multi-compose-file-test](examples/multi-compose-file-test) for a
+runnable example.
+
+### Keyword-only arguments
+
+All arguments to `docker_compose_test`, `go_docker_compose_test`, and
+`junit_docker_compose_test` must be passed by keyword — including `name`.
+Positional calls will fail at load time.
 
 ## pre_compose_up_script
 
