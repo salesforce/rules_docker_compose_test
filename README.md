@@ -190,13 +190,10 @@ docker_compose_test(
 )
 ```
 
-Files are passed to `docker compose -f a -f b [-f c ...]` in list order. Compose
-deep-merges them per its
-[multi-file merge semantics](https://docs.docker.com/reference/compose-file/merge/):
-scalars replace, maps merge by key, and **sequences replace wholesale**. If you
-want to add to (rather than replace) a base file's list — e.g. `depends_on` or
-`networks` — use the map form (`depends_on: {svc: {condition: service_healthy}}`)
-so Compose merges by key.
+Files are passed to `docker compose -f a -f b [-f c ...]` in list order, so
+later files override earlier ones. See Compose's
+[multi-file merge semantics](https://docs.docker.com/reference/compose-file/merge/)
+for the exact rules.
 
 See [examples/multi-compose-file-test](examples/multi-compose-file-test) for a
 runnable example.

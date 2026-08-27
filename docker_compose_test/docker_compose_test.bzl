@@ -48,8 +48,12 @@ def _project_base_from_name(name):
 
 def _check_compose_files(docker_compose_files):
     # Order in `docker_compose_files` is preserved through to `docker compose
-    # -f <file>` in the same order: later files override earlier files per
-    # Compose's multi-file merge semantics.
+    # -f <file>` in the same order: later files override earlier ones. The
+    # explicit type check catches `docker_compose_files = ":foo.yml"` (a
+    # leftover from the old singular attr) at the call site rather than
+    # deep inside list concatenation.
+    if type(docker_compose_files) != "list":
+        fail("docker_compose_test: docker_compose_files must be a list of labels, got " + type(docker_compose_files))
     if not len(docker_compose_files):
         fail("docker_compose_test: docker_compose_files must be a non-empty list")
 
