@@ -173,6 +173,41 @@ services:
     entrypoint: ["tests/go-test-image-test.go_test"]
 ```
 
+## Composing multiple compose files
+
+If a family of tests shares most of a Compose topology, you can factor the
+shared services into a base file and layer per-scenario overrides on top with
+`docker_compose_files` (plural) instead of `docker_compose_file`:
+
+```starlark
+docker_compose_test(
+    name = "multi-compose-file-test",
+    docker_compose_files = [
+        ":base.yml",
+        ":override.yml",
+    ],
+    docker_compose_test_container = "test_container",
+)
+```
+
+Files are passed to `docker compose -f a -f b [-f c ...]` in list order. Compose
+deep-merges them per its
+[multi-file merge semantics](https://docs.docker.com/reference/compose-file/merge/):
+scalars replace, maps merge by key, and **sequences replace wholesale**. If you
+want to add to (rather than replace) a base file's list — e.g. `depends_on` or
+`networks` — use the map form (`depends_on: {svc: {condition: service_healthy}}`)
+so Compose merges by key.
+
+Exactly one of `docker_compose_file` or `docker_compose_files` must be set. See
+[examples/multi-compose-file-test](examples/multi-compose-file-test) for a
+runnable example.
+
+### Keyword-only arguments
+
+All arguments to `docker_compose_test`, `go_docker_compose_test`, and
+`junit_docker_compose_test` must be passed by keyword — including `name`.
+Positional calls will fail at load time.
+
 ## pre_compose_up_script
 
 Sometimes, you may need some logic to run before the compose test containers come up. You can use `pre_compose_up_script` for that purpose. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.

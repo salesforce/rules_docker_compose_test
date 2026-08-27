@@ -69,10 +69,11 @@ def _test_data(data, compose_files, pre_compose_up_script, post_compose_down_scr
     return data
 
 def docker_compose_test(
+    *,
     name,
+    docker_compose_test_container,
     docker_compose_file = None,
     docker_compose_files = [],
-    docker_compose_test_container = None,
     pre_compose_up_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
@@ -95,10 +96,11 @@ def docker_compose_test(
     )
 
 def go_docker_compose_test(
+    *,
     name,
+    docker_compose_test_container,
     docker_compose_file = None,
     docker_compose_files = [],
-    docker_compose_test_container = None,
     pre_compose_up_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
@@ -178,10 +180,11 @@ def go_docker_compose_test(
 
 
 def junit_docker_compose_test(
+    *,
     name,
+    docker_compose_test_container,
     docker_compose_file = None,
     docker_compose_files = [],
-    docker_compose_test_container = None,
     pre_compose_up_script = "",
     extra_docker_compose_up_args = "",
     local_image_targets = "",
