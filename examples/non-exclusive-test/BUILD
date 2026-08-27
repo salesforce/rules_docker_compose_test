@@ -30,7 +30,7 @@ load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", 
 
 docker_compose_test(
     name = "non-exclusive-test-a",
-    docker_compose_file = ":docker-compose.yml",
+    docker_compose_files = [":docker-compose.yml"],
     docker_compose_test_container = "test_container",
     exclusive = False,
     pre_compose_up_script = ":src/test/resources/setup_test.sh",
@@ -40,7 +40,7 @@ docker_compose_test(
 
 docker_compose_test(
     name = "non-exclusive-test-b",
-    docker_compose_file = ":docker-compose.yml",
+    docker_compose_files = [":docker-compose.yml"],
     docker_compose_test_container = "test_container",
     exclusive = False,
     pre_compose_up_script = ":src/test/resources/setup_test.sh",
