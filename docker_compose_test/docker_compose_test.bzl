@@ -192,6 +192,7 @@ def junit_docker_compose_test(
     size = "large",
     exclusive = True,
     post_compose_down_script = "",
+    junit_console_mode = "execute",
     **kwargs):
     _check_compose_files(docker_compose_files)
     build_tags = common_tags + tags
@@ -199,6 +200,9 @@ def junit_docker_compose_test(
 
     if test_image_base == None:
         fail("if you are defining test_srcs, you need to provide a test_image_base")
+
+    if junit_console_mode not in ("execute", "legacy"):
+        fail("junit_docker_compose_test: junit_console_mode must be 'execute' or 'legacy', got '%s'" % junit_console_mode)
 
     # building an uber jar with test srcs & all dependencies
     native.java_binary(
@@ -235,6 +239,7 @@ def junit_docker_compose_test(
     oci_image(
         name = name.lower() + "_java_image",
         base = test_image_base,
+        env = {"JUNIT_CONSOLE_MODE": junit_console_mode},
         tars = [
           name + "_uber_jar_tar",
           name + "_required_classpath_jars_tar",
