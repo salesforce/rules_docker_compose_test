@@ -15,11 +15,15 @@
 
 load("@rules_docker_compose_test//docker_compose_test:docker_compose_test.bzl", "junit_docker_compose_test")
 
+# Companion to //junit-image-test, exercising `junit_console_mode = "legacy"`
+# for callers on junit-platform-console-standalone <= 5.9. The console jar
+# pinned in examples/MODULE.bazel is 5.10.x, which still accepts the legacy
+# invocation form.
 junit_docker_compose_test(
-    name = "junit-image-test",
+    name = "junit-image-test-legacy",
     docker_compose_files = [":docker-compose.yml"],
     docker_compose_test_container = "test_container",
-    junit_console_mode = "execute",
+    junit_console_mode = "legacy",
     test_srcs = glob(["**/*Test.java"]),
     test_deps = ["@maven//:org_junit_jupiter_junit_jupiter_api"],
     classpath_jars = ["@maven//:org_junit_platform_junit_platform_console_standalone"],

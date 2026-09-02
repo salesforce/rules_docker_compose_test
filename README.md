@@ -141,6 +141,27 @@ services:
       - JVM_ARGS=-Dfoo.bar=true
 ```
 
+#### JUnit console mode (2.1.0+)
+
+Starting with `rules_docker_compose_test` 2.1.0, `junit_docker_compose_test`
+defaults to invoking the launcher with the `execute` subcommand, which was
+introduced in JUnit 5.10 and is required by JUnit 6.x. This works for callers
+on **junit-platform-console-standalone 5.10 or newer**.
+
+Callers still on `junit-platform-console-standalone` ≤ 5.9 can opt out of the
+subcommand by setting `junit_console_mode = "legacy"`:
+
+```starlark
+junit_docker_compose_test(
+    name = "junit-image-test",
+    ...,
+    junit_console_mode = "legacy",  # omit the `execute` subcommand
+)
+```
+
+Valid values are `"execute"` (default) and `"legacy"`. The mode is baked into
+the test image as the `JUNIT_CONSOLE_MODE` env var.
+
 #### javacopts
 
 You can pass `javacopts` when building the uber junit test binary using `uber_jar_javacopts`.
