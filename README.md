@@ -141,6 +141,15 @@ services:
       - JVM_ARGS=-Dfoo.bar=true
 ```
 
+#### JUnit version requirement (2.1.0+)
+
+Starting with `rules_docker_compose_test` 2.1.0, `junit_docker_compose_test`
+requires **junit-platform-console-standalone 5.10 or newer**. The container
+entrypoint invokes the launcher with the `execute` subcommand, which was
+introduced in JUnit 5.10 and is required by JUnit 6.x. Consumers on
+`junit-platform-console-standalone` ≤ 5.9 must stay on
+`rules_docker_compose_test` 2.0.x or earlier.
+
 #### javacopts
 
 You can pass `javacopts` when building the uber junit test binary using `uber_jar_javacopts`.

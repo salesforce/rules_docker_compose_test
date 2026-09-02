@@ -42,7 +42,14 @@ done
 # JVM_ARGS can be set in the docker-compose file.
 # JUNIT_PARAMS can be set in the docker-compose file to filter for specific tests
 # e.g. --include-classname com.something.integration.*
-cmd="$JAVA_HOME/bin/java -jar $JVM_ARGS $JUNIT_PLATFORM_CONSOLE_STANDALONE_JAR \
+#
+# The `execute` subcommand is required by junit-platform-console-standalone 6.x
+# and available in 5.10+ (see JUnit 5.10.0 release notes — the ConsoleLauncher
+# functionality was split into `execute` / `engines` subcommands). Without it,
+# JUnit 6 fails with "Usage: junit [OPTIONS] COMMAND / Unknown options:
+# '--scan-class-path' ...". Callers on JUnit <5.10 must stay on an older
+# rules_docker_compose_test release.
+cmd="$JAVA_HOME/bin/java -jar $JVM_ARGS $JUNIT_PLATFORM_CONSOLE_STANDALONE_JAR execute \
     --scan-class-path --fail-if-no-tests $CLASS_PATH_STRING --class-path $TEST_UBER_JAR $JUNIT_PARAMS"
 echo $cmd
 $cmd
