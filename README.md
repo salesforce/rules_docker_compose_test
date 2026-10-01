@@ -239,3 +239,63 @@ including failures that occur before Compose starts. It corresponds to
 ## extra_docker_compose_up_args
 
 You can append extra arguments to the `docker compose up` command using `extra_docker_compose_up_args`. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
+
+## Setup containers that run to completion
+
+Compose graphs sometimes include a dedicated "setup" or "seeder" service that
+performs one-time initialization — creates an S3 bucket, seeds a database,
+writes fixtures to a shared volume — and then exits cleanly. Downstream
+services wait on it with `depends_on` + `condition: service_completed_successfully`.
+
+The rule's default invocation (`docker compose up --exit-code-from <test>`)
+implicitly combines with `--abort-on-container-exit`, so the setup
+container's clean exit tears the whole stack down before the test runs,
+with a misleading `dependency failed to start` error.
+
+Pass `--abort-on-container-failure` via `extra_docker_compose_up_args` to
+override that implication:
+
+```starlark
+docker_compose_test(
+    name = "setup-exit-test",
+    docker_compose_files = [":compose.yml"],
+    docker_compose_test_container = "test_container",
+    extra_docker_compose_up_args = "--abort-on-container-failure",
+)
+```
+
+With this flag, Compose only aborts the stack on a **non-zero** exit. Setup
+containers that exit 0 are allowed to finish; setup containers that fail
+still tear the stack down immediately (and the test fails fast).
+
+Example compose shape:
+
+```yaml
+services:
+  setup:
+    image: ubuntu:25.04
+    restart: "no"
+    volumes: [shared:/shared]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["touch /shared/ready"]
+
+  test_container:
+    image: ubuntu:25.04
+    volumes: [shared:/shared]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["test -f /shared/ready"]
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+volumes:
+  shared:
+```
+
+See [examples/setup-exit-test](examples/setup-exit-test) for a runnable
+example.
+
+**Requires Docker Compose v2.26.0+** (`--abort-on-container-failure` was
+added in that release). Hosts on older Compose should keep the setup
+container alive for the duration of the test (e.g. `sleep infinity` after
+writing a sentinel the dependents gate on via `service_healthy`).
