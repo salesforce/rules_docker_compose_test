@@ -78,13 +78,23 @@ def docker_compose_test(
     size = "large",
     exclusive = True,
     post_compose_down_script = "",
+    use_docker_compose_run = False,
     **kwargs):
     _check_compose_files(docker_compose_files)
     data = _test_data(data, docker_compose_files, pre_compose_up_script, post_compose_down_script)
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_files, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
+        env = _get_env(
+            docker_compose_files,
+            local_image_targets,
+            docker_compose_test_container,
+            pre_compose_up_script,
+            extra_docker_compose_up_args,
+            "" if exclusive else _project_base_from_name(name),
+            post_compose_down_script,
+            use_docker_compose_run,
+        ),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -108,6 +118,7 @@ def go_docker_compose_test(
     size = "large",
     exclusive = True,
     post_compose_down_script = "",
+    use_docker_compose_run = False,
     **kwargs,
 ):
     _check_compose_files(docker_compose_files)
@@ -166,7 +177,16 @@ def go_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_files, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
+        env = _get_env(
+            docker_compose_files,
+            local_image_targets,
+            docker_compose_test_container,
+            pre_compose_up_script,
+            extra_docker_compose_up_args,
+            "" if exclusive else _project_base_from_name(name),
+            post_compose_down_script,
+            use_docker_compose_run,
+        ),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -193,6 +213,7 @@ def junit_docker_compose_test(
     exclusive = True,
     post_compose_down_script = "",
     junit_console_mode = "execute",
+    use_docker_compose_run = False,
     **kwargs):
     _check_compose_files(docker_compose_files)
     build_tags = common_tags + tags
@@ -271,7 +292,16 @@ def junit_docker_compose_test(
     native.sh_test(
         name = name,
         srcs = ["@rules_docker_compose_test//docker_compose_test:docker_compose_test.sh"],
-        env = _get_env(docker_compose_files, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, "" if exclusive else _project_base_from_name(name), post_compose_down_script),
+        env = _get_env(
+            docker_compose_files,
+            local_image_targets,
+            docker_compose_test_container,
+            pre_compose_up_script,
+            extra_docker_compose_up_args,
+            "" if exclusive else _project_base_from_name(name),
+            post_compose_down_script,
+            use_docker_compose_run,
+        ),
         size = size,
         tags = _test_tags(tags, exclusive),
         data = data,
@@ -279,7 +309,15 @@ def junit_docker_compose_test(
     )
 
 
-def _get_env(compose_files, local_image_targets, docker_compose_test_container, pre_compose_up_script, extra_docker_compose_up_args, docker_compose_project_name = "", post_compose_down_script = ""):
+def _get_env(
+    compose_files,
+    local_image_targets,
+    docker_compose_test_container,
+    pre_compose_up_script,
+    extra_docker_compose_up_args,
+    docker_compose_project_name = "",
+    post_compose_down_script = "",
+    use_docker_compose_run = False):
     # Compose files are passed as a newline-separated list so the shell
     # script can iterate without shell-metachar hazards on individual paths.
     # `$(location ...)` is expanded at analysis time so the shell sees the
@@ -296,6 +334,16 @@ def _get_env(compose_files, local_image_targets, docker_compose_test_container, 
         "EXTRA_DOCKER_COMPOSE_UP_ARGS": extra_docker_compose_up_args,
     }
 
+    if use_docker_compose_run:
+        # Opts the shell driver into `docker compose run <test>` instead
+        # of `up --exit-code-from <test>`. Required for compose graphs
+        # that include a setup/seeder service that exits cleanly on
+        # completion — `up --exit-code-from` implies
+        # `--abort-on-container-exit`, which tears the stack down the
+        # moment any service exits. `compose run` starts the test's
+        # transitive depends_on chain, blocks until the test container
+        # exits, and returns its exit code. See docker_compose_test.sh.
+        env["USE_DOCKER_COMPOSE_RUN"] = "1"
     if len(docker_compose_project_name):
         env["DOCKER_COMPOSE_PROJECT_BASE"] = docker_compose_project_name
     if len(pre_compose_up_script):

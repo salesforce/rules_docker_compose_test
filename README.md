@@ -239,3 +239,63 @@ including failures that occur before Compose starts. It corresponds to
 ## extra_docker_compose_up_args
 
 You can append extra arguments to the `docker compose up` command using `extra_docker_compose_up_args`. See [examples/pre-compose-up-script-test](examples/pre-compose-up-script-test) for an example.
+
+## use_docker_compose_run (setup containers that run to completion)
+
+By default, the rule invokes `docker compose up --exit-code-from <test>`, which
+Docker Compose implicitly combines with `--abort-on-container-exit`. This tears
+the whole stack down the moment *any* service exits — fatal for the common
+pattern where a dedicated "setup" container seeds state (buckets, queues,
+fixtures) and exits 0 while downstream services keep running.
+
+Set `use_docker_compose_run = True` to opt into a `docker compose run <test>`
+invocation instead. Compose then walks the test service's `depends_on` chain —
+honoring every `condition:` gate, including `service_completed_successfully` —
+starts the test container, blocks until it exits, and returns its exit code.
+The long-lived services (databases, mocks, etc.) keep running throughout and
+are torn down with the usual `docker compose down` cleanup.
+
+Compose files using this attribute should declare setup containers with
+`restart: "no"` and have dependents gate on `service_completed_successfully`:
+
+```yaml
+services:
+  setup:
+    image: ubuntu:25.04
+    restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["touch /shared/ready"]
+    volumes: [shared:/shared]
+
+  test_container:
+    image: ubuntu:25.04
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    volumes: [shared:/shared]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["test -f /shared/ready"]
+
+volumes:
+  shared:
+```
+
+```starlark
+docker_compose_test(
+    name = "setup-exit-test",
+    use_docker_compose_run = True,
+    docker_compose_files = [":compose.yml"],
+    docker_compose_test_container = "test_container",
+)
+```
+
+See [examples/setup-exit-test](examples/setup-exit-test) for a runnable
+example. The attribute is supported on all three macros
+(`docker_compose_test`, `go_docker_compose_test`,
+`junit_docker_compose_test`).
+
+Services not referenced (directly or transitively) by the test container's
+`depends_on` chain will not start under `compose run`. For most real
+compose graphs that already use `depends_on` to express the dependency
+graph, this is the desired behavior; be aware if your compose file
+contains orphan services it relies on starting.

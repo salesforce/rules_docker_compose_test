@@ -143,7 +143,50 @@ cleanup() {
 # SIGINT: sent on Ctrl+C.
 trap cleanup EXIT
 
-# bring up compose file(s) & get exit status-code from the integration test container.
+SERVICE="$DOCKER_COMPOSE_TEST_CONTAINER"
+
+if [[ "${USE_DOCKER_COMPOSE_RUN:-}" == "1" ]]; then
+    # Use `docker compose run` to start the test. Compose walks the
+    # test service's `depends_on` chain (honoring every
+    # `condition:` gate, including `service_completed_successfully`),
+    # starts the test container, blocks until it exits, and returns
+    # its exit code.
+    #
+    # This is the right shape for compose graphs that include a
+    # setup/seeder service that runs to completion. The default `up
+    # --exit-code-from` path implies `--abort-on-container-exit`,
+    # which tears the stack down the moment any service exits —
+    # fatal for cleanly-exiting setup containers.
+    #
+    # Setup containers must be declared with `restart: "no"` and the
+    # downstream `depends_on` must use `condition:
+    # service_completed_successfully`.
+    docker_compose_run_cmd=(
+        "${docker_compose_cmd[@]}"
+        "${compose_file_args[@]}"
+        "run" "--rm"
+    )
+    if [ -n "$EXTRA_DOCKER_COMPOSE_UP_ARGS" ]; then
+        IFS=' ' read -r -a extra_args <<< "$EXTRA_DOCKER_COMPOSE_UP_ARGS"
+        docker_compose_run_cmd+=("${extra_args[@]}")
+    fi
+    docker_compose_run_cmd+=("$SERVICE")
+    echo "running: ${docker_compose_run_cmd[@]}"
+    "${docker_compose_run_cmd[@]}"
+    RUN_EXIT_CODE=$?
+    # `compose run --rm` removes the test container after it exits,
+    # so the post-hoc docker inspect below won't find it. Shortcut to
+    # PASS/FAIL based on `compose run`'s direct exit code.
+    if [ "$RUN_EXIT_CODE" -eq 0 ]; then
+        echo "PASS ($SERVICE compose run exit 0)"
+        exit 0
+    fi
+    echo "FAIL ($SERVICE compose run exit $RUN_EXIT_CODE)" >&2
+    exit 1
+fi
+
+# Original behavior — bring up all compose file(s) & get exit
+# status-code from the integration test container.
 docker_compose_up_cmd=(
     "${docker_compose_cmd[@]}"
     "${compose_file_args[@]}"
@@ -154,14 +197,12 @@ if [ -n "$EXTRA_DOCKER_COMPOSE_UP_ARGS" ]; then
     IFS=' ' read -r -a extra_args <<< "$EXTRA_DOCKER_COMPOSE_UP_ARGS"
     docker_compose_up_cmd+=("${extra_args[@]}")
 fi
-
 echo "running: ${docker_compose_up_cmd[@]}"
 "${docker_compose_up_cmd[@]}"
 
 # `docker compose up --exit-code-from` can still exit 0 in edge cases (e.g. the named service never
 # schedules while Compose treats the session as done). Resolve the service container via this compose
 # project and verify it actually exited successfully.
-SERVICE="$DOCKER_COMPOSE_TEST_CONTAINER"
 # ps -a includes exited containers; tolerate ps failure so we still hit the FAIL branch below.
 CID="$("${docker_compose_cmd[@]}" "${compose_file_args[@]}" ps -a -q "$SERVICE" 2>/dev/null | head -n 1)" || CID=""
 CID="${CID//$'\r'/}"
